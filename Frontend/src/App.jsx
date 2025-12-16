@@ -18,10 +18,7 @@ function HomePage() {
         un polar, une romance, un roman de science-fiction et un roman feel-good.
       </div>
 
-      <p className="description">
-        RomanClub s’adresse à celles et ceux qui aiment découvrir de nouveaux romans<br />
-        et soutenir la création littéraire émergente.
-      </p>
+
 
       <div className="actions">
         <Link to="/inscription" className="btn btn-primary">S’INSCRIRE GRATUITEMENT</Link>
