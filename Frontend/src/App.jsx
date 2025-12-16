@@ -14,18 +14,12 @@ function HomePage() {
       </div>
 
       <div className="main-text">
-        RomanClub publie un nouveau roman chaque semaine.
-        <span className="highlight">
-          Chaque mois :<br />
-          un polar, une romance,<br />
-          un roman de science-fiction<br />
-          et un roman feel-good.
-        </span>
+        Chaque mois, RomanClub publie quatre romans inédits :<br />
+        un polar, une romance, un roman de science-fiction et un roman feel-good.
       </div>
 
       <p className="description">
-        RomanClub s’adresse à celles et ceux<br />
-        qui aiment découvrir de nouveaux romans<br />
+        RomanClub s’adresse à celles et ceux qui aiment découvrir de nouveaux romans<br />
         et soutenir la création littéraire émergente.
       </p>
 
