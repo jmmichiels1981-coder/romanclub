@@ -6,7 +6,7 @@ function HomePage() {
     <div className="container">
       <img src="/logo.png" alt="RomanClub Logo" className="logo" />
       <h1>ROMANCLUB</h1>
-      <p className="subtitle">Un club de lecture dédié aux auteurs émergents.</p>
+      <p className="subtitle">Un club de lecture numérique dédié aux auteurs émergents.</p>
 
       <div className="badges">
         <span className="badge">Accès gratuit à tous les romans jusqu’au 30 juin 2026</span>
@@ -14,7 +14,7 @@ function HomePage() {
       </div>
 
       <div className="main-text">
-        Chaque mois, RomanClub publie quatre romans inédits :<br />
+        Chaque mois, RomanClub publie quatre romans numériques inédits :<br />
         un polar, une romance, un roman de science-fiction et un roman feel-good.
       </div>
 
