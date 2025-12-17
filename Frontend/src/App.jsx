@@ -24,9 +24,22 @@ function HomePage() {
       </div>
 
       <div className="actions">
-        <Link to="/inscription" className="btn btn-primary">S’INSCRIRE GRATUITEMENT</Link>
-        <Link to="/connexion" className="btn btn-secondary">SE CONNECTER</Link>
+        <Link to="/inscription" className="btn btn-primary">
+          S’INSCRIRE GRATUITEMENT
+        </Link>
 
+        <Link to="/connexion" className="btn btn-secondary">
+          SE CONNECTER
+        </Link>
+
+        {/* BOUTON TEMPORAIRE – TEST LECTEUR */}
+        <Link
+          to="/lecture"
+          className="btn btn-secondary"
+          style={{ marginTop: '1rem' }}
+        >
+          TESTER LE LECTEUR
+        </Link>
       </div>
 
       <footer className="footer">
@@ -46,7 +59,10 @@ function PlaceholderPage({ title }) {
   return (
     <div className="container">
       <h1>{title}</h1>
-      <Link to="/" style={{ color: 'var(--primary-color)', marginTop: '2rem' }}>
+      <Link
+        to="/"
+        style={{ color: 'var(--primary-color)', marginTop: '2rem' }}
+      >
         Retour à l'accueil
       </Link>
     </div>
