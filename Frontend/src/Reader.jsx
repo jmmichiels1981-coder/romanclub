@@ -1,13 +1,11 @@
 import "./reader.css";
-import chapter from "./chapters/chapter-01.html?raw";
 
-
-function Reader() {
+function Reader({ content }) {
     return (
         <div className="reader-container">
             <div
                 className="reader-content"
-                dangerouslySetInnerHTML={{ __html: chapter }}
+                dangerouslySetInnerHTML={{ __html: content || "" }}
             />
         </div>
     );
