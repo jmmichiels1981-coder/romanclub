@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './index.css';
 import Reader from './Reader';
+import Roman from './Roman';
 
 /* ======================
    HOME PAGE
@@ -39,6 +40,15 @@ function HomePage() {
           style={{ marginTop: '1rem' }}
         >
           TESTER LE LECTEUR
+        </Link>
+
+        {/* BOUTON TEMPORAIRE – TEST PAGE ROMAN */}
+        <Link
+          to="/roman"
+          className="btn btn-secondary"
+          style={{ marginTop: '0.5rem' }}
+        >
+          FICHE ROMAN (TEST)
         </Link>
       </div>
 
@@ -79,6 +89,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/lecture" element={<Reader />} />
+        <Route path="/roman" element={<Roman />} />
 
         <Route path="/inscription" element={<PlaceholderPage title="Inscription" />} />
         <Route path="/connexion" element={<PlaceholderPage title="Connexion" />} />
