@@ -1,13 +1,16 @@
 import "./reader.css";
+import chapter from "./chapters/chapter-01.html?raw";
 
-export default function Reader() {
+
+function Reader() {
     return (
-        <div className="reader">
-            <h1>Chapitre 1</h1>
-
-            <p>Le soleil se levait à peine sur la ville.</p>
-            <p>— Tu es en retard, dit-elle.</p>
-            <p>Il ne répondit pas.</p>
+        <div className="reader-container">
+            <div
+                className="reader-content"
+                dangerouslySetInnerHTML={{ __html: chapter }}
+            />
         </div>
     );
 }
+
+export default Reader;

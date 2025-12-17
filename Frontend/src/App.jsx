@@ -1,5 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './index.css';
+import Reader from './Reader';
+
+/* ======================
+   HOME PAGE
+   ====================== */
 
 function HomePage() {
   return (
@@ -18,11 +23,10 @@ function HomePage() {
         un polar, une romance, un roman de science-fiction et un roman feel-good.
       </div>
 
-
-
       <div className="actions">
         <Link to="/inscription" className="btn btn-primary">S’INSCRIRE GRATUITEMENT</Link>
         <Link to="/connexion" className="btn btn-secondary">SE CONNECTER</Link>
+
       </div>
 
       <footer className="footer">
@@ -34,20 +38,32 @@ function HomePage() {
   );
 }
 
+/* ======================
+   PLACEHOLDER
+   ====================== */
+
 function PlaceholderPage({ title }) {
   return (
     <div className="container">
       <h1>{title}</h1>
-      <Link to="/" style={{ color: 'var(--primary-color)', marginTop: '2rem' }}>Retour à l'accueil</Link>
+      <Link to="/" style={{ color: 'var(--primary-color)', marginTop: '2rem' }}>
+        Retour à l'accueil
+      </Link>
     </div>
   );
 }
+
+/* ======================
+   APP
+   ====================== */
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/lecture" element={<Reader />} />
+
         <Route path="/inscription" element={<PlaceholderPage title="Inscription" />} />
         <Route path="/connexion" element={<PlaceholderPage title="Connexion" />} />
         <Route path="/admin" element={<PlaceholderPage title="Admin" />} />
