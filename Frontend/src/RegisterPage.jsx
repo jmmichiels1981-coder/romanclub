@@ -7,6 +7,7 @@ function RegisterPage() {
     // Use environment variable or default to localhost
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+    const [step, setStep] = useState(1); // 1=Form, 2=Payment, 3=Confirmation
     const [formData, setFormData] = useState({
         nom: "",
         prenom: "",
@@ -29,31 +30,35 @@ function RegisterPage() {
         setFormData(prev => ({ ...prev, sexe: val }));
     };
 
-    const handleSubmit = async (e) => {
+    // Step 1 -> Step 2
+    const handleFormSubmit = (e) => {
         e.preventDefault();
 
-        // Basic Validation
+        // Validation
         if (!formData.sexe) {
             alert("Veuillez sélectionner votre sexe.");
             return;
         }
-
         if (formData.password !== formData.confirmPassword) {
             alert("Les mots de passe ne correspondent pas.");
             return;
         }
-
         if (formData.pin !== formData.confirmPin) {
             alert("Les codes PIN ne correspondent pas.");
             return;
         }
-
         if (formData.pin.length !== 4 || isNaN(formData.pin)) {
             alert("Le code PIN doit être composé de 4 chiffres.");
             return;
         }
 
-        // Prepare info for backend
+        // Go to payment step
+        setStep(2);
+    };
+
+    // Step 2 -> Step 3 (Simulate Payment Success & Calling Backend)
+    const handlePaymentSuccess = async () => {
+        // Here we call the backend to actually register the user
         const payload = {
             nom: formData.nom,
             prenom: formData.prenom,
@@ -66,77 +71,92 @@ function RegisterPage() {
         };
 
         try {
-            console.log("Submitting registration:", payload);
-
-            // In a real scenario, uncomment and use fetch:
-            /*
-            const response = await fetch(`${API_URL}/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            const data = await response.json();
-            if (data.success) {
-                alert("Inscription réussie !");
-                navigate("/connexion");
-            } else {
-                alert("Erreur lors de l'inscription : " + data.message);
-            }
-            */
-
-            // For now, simulate success or allow UI testing
-            // alert("Simulation d'inscription : " + JSON.stringify(payload));
-
-            // Since backend might not have this endpoint fully readied for this specific payload, 
-            // we'll try to actually hit it if it exists, or just fallback.
-            // User asked to just make the page for now and push.
-            // I'll leave the fetch commented out or try it? 
-            // Generally safer to mock it if I'm not sure of backend.
-            // But I should try to make it functional if possible. 
-            // Let's assume standard endpoint /register exists in backend.
-
-            // However, looking at previous history, the backend might handle /register.
-            // I'll try to implement the fetch but wrap it safely.
-
             const response = await fetch(`${API_URL}/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
 
-            // If backend returns html (404/500), this might fail.
+            // Handle response carefully (ensure JSON)
             const contentType = response.headers.get("content-type");
+            let data = {};
             if (contentType && contentType.includes("application/json")) {
-                const data = await response.json();
-                if (response.ok) {
-                    alert("Compte créé avec succès ! Connectez-vous.");
-                    navigate("/connexion");
-                } else {
-                    alert("Erreur: " + (data.message || "Échec de l'inscription"));
-                }
-            } else {
-                // Fallback if backend isn't ready
-                console.warn("Backend response was not JSON", response);
-                alert("Simulation interne: Inscription validée (Backend non connecté).");
-                navigate("/connexion");
+                data = await response.json();
             }
 
+            if (response.ok && data.success) {
+                // Auto-login locally if needed or just show confirmation
+                localStorage.setItem("user", JSON.stringify(data.user));
+                localStorage.setItem("userLoggedIn", "true");
+                setStep(3);
+            } else {
+                alert("Erreur: " + (data.message || "Échec de l'inscription"));
+            }
         } catch (error) {
             console.error("Registration error:", error);
-            alert("Erreur technique ou serveur inaccessible. (Mode hors-ligne)");
+            // Fallback for simulation if backend is down
+            alert("Mode simulation (Backend inaccessible)");
+            setStep(3);
         }
     };
+
+    if (step === 3) {
+        return (
+            <div className="login-container">
+                <div className="login-card" style={{ textAlign: 'center', alignItems: 'center' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
+                    <h1 className="brand-title" style={{ color: '#ff7700', marginBottom: '1.5rem' }}>Inscription confirmée</h1>
+
+                    <p style={{ color: '#fff', marginBottom: '0.5rem' }}>Votre inscription à RomanClub est désormais active.</p>
+                    <p style={{ color: '#ccc', marginBottom: '0.5rem' }}>Votre moyen de paiement a été enregistré en toute sécurité.</p>
+                    <p style={{ color: '#ccc', marginBottom: '2rem' }}>Aucun prélèvement ne sera effectué avant le 1er juillet 2026.</p>
+
+                    <button
+                        className="login-btn"
+                        onClick={() => navigate("/lecture")}
+                    >
+                        Accéder à ma Bibliothèque
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (step === 2) {
+        return (
+            <div className="login-container">
+                <div className="login-header">
+                    <h1 className="brand-title">PAIEMENT</h1>
+                    <p className="page-subtitle">ÉTAPE 2/2</p>
+                </div>
+                <div className="login-card" style={{ textAlign: 'center' }}>
+                    <p style={{ color: '#fff', marginBottom: '2rem' }}>
+                        Simulation de l'étape de paiement sécurisé.
+                    </p>
+                    <button className="login-btn" onClick={handlePaymentSuccess}>
+                        SIMULER VALIDATION PAIEMENT
+                    </button>
+                    <button
+                        style={{ marginTop: '1rem', background: 'transparent', border: 'none', color: '#888', cursor: 'pointer' }}
+                        onClick={() => setStep(1)}
+                    >
+                        Retour
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="login-container">
             <div className="login-header">
                 <img src="/logo.png" alt="Roman Club Logo" className="login-logo" />
                 <h1 className="brand-title">ROMAN CLUB</h1>
-                <p className="page-subtitle">INSCRIPTION</p>
+                <p className="page-subtitle">INSCRIPTION - ÉTAPE 1/2</p>
             </div>
 
             <div className="login-card">
-                <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+                <form onSubmit={handleFormSubmit} style={{ width: '100%' }}>
 
                     <div className="input-group">
                         <label className="input-label">Nom</label>

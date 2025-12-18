@@ -69,6 +69,40 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// Register Endpoint
+app.post("/register", async (req, res) => {
+  const userData = req.body;
+
+  if (!db) return res.status(500).json({ error: "Database not connected" });
+  if (!userData.email) return res.status(400).json({ error: "Email required" });
+
+  try {
+    // Check if user exists
+    const existingUser = await usersCollection.findOne({ email: userData.email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "Cet email est déjà utilisé." });
+    }
+
+    const newUser = {
+      ...userData,
+      createdAt: new Date(),
+      role: "user",
+      subscriptionStatus: "active", // In future, might depend on payment
+      subscriptionStart: "2026-07-01",
+      paymentMethodSecurelyStored: true, // Simulation
+      welcomeGiftPending: true // Prepare for the gift logic
+    };
+
+    const result = await usersCollection.insertOne(newUser);
+    newUser._id = result.insertedId;
+
+    res.json({ success: true, user: newUser });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Update Welcome Seen Endpoint
 app.post("/update-welcome", async (req, res) => {
   const { email } = req.body;
