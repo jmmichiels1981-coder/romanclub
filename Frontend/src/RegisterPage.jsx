@@ -191,6 +191,8 @@ function RegisterPage() {
                             name="email"
                             className="login-input"
                             placeholder="votre@email.com"
+                            pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+                            title="Veuillez entrer une adresse email valide"
                             required
                             value={formData.email}
                             onChange={handleChange}
