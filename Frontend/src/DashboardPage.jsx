@@ -8,12 +8,15 @@ const DashboardPage = () => {
     const [view, setView] = useState('dashboard'); // 'dashboard', 'library', 'stats', 'path', 'settings'
 
     // Mock Data
-    const mockUser = {
-        nom: "Dupont",
-        prenom: "Jean",
-        email: "jean.dupont@example.com",
-        dateInscription: "15/12/2025",
-        statut: "Abonné actif"
+    // User Data from LocalStorage
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+    const userProfile = {
+        nom: storedUser.nom || "Dupont",
+        prenom: storedUser.prenom || "Jean",
+        email: storedUser.email || "jean.dupont@example.com",
+        dateInscription: storedUser.dateInscription || "15/12/2025",
+        statut: storedUser.statut || "Abonné actif"
     };
 
     const mockStats = {
@@ -180,11 +183,11 @@ const DashboardPage = () => {
             <h2 className="view-title" style={{ color: '#2196f3' }}>Paramètres</h2>
 
             <div className="settings-card">
-                <div className="setting-row"><span className="label">Nom :</span> {mockUser.nom}</div>
-                <div className="setting-row"><span className="label">Prénom :</span> {mockUser.prenom}</div>
-                <div className="setting-row"><span className="label">Email :</span> {mockUser.email}</div>
-                <div className="setting-row"><span className="label">Inscrit le :</span> {mockUser.dateInscription}</div>
-                <div className="setting-row"><span className="label">Statut :</span> <span className="status-active">{mockUser.statut}</span></div>
+                <div className="setting-row"><span className="label">Nom :</span> {userProfile.nom}</div>
+                <div className="setting-row"><span className="label">Prénom :</span> {userProfile.prenom}</div>
+                <div className="setting-row"><span className="label">Email :</span> {userProfile.email}</div>
+                <div className="setting-row"><span className="label">Inscrit le :</span> {userProfile.dateInscription}</div>
+                <div className="setting-row"><span className="label">Statut :</span> <span className="status-active">{userProfile.statut}</span></div>
             </div>
 
             <div className="settings-actions">
@@ -203,7 +206,7 @@ const DashboardPage = () => {
                     <h1>Tableau de bord</h1>
                 </div>
                 <div className="header-right">
-                    <span className="user-welcome">Bienvenue, {mockUser.prenom}</span>
+                    <span className="user-welcome">Bienvenue, {userProfile.prenom}</span>
                     <button className="btn-logout" onClick={handleLogout}>Déconnexion</button>
                 </div>
             </header>
