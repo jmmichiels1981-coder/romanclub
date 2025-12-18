@@ -271,6 +271,18 @@ function RegisterPage() {
                                     <input type="text" readOnly value={formData.prenom} className="login-input" style={{ color: '#888' }} />
                                 </div>
                             </div>
+                            <div style={{
+                                backgroundColor: 'rgba(21, 87, 36, 0.4)',
+                                border: '1px solid #155724',
+                                color: '#4caf50', // Brighter green for readability on dark background
+                                padding: '1rem',
+                                borderRadius: '4px',
+                                marginTop: '1.5rem',
+                                fontSize: '0.9rem',
+                                lineHeight: '1.4'
+                            }}>
+                                Vos informations de paiement sont entièrement sécurisées et cryptées. Elles ne sont jamais stockées chez nous et sont traitées par un prestataire certifié. Aucun prélèvement ne sera effectué avant le 1er septembre.
+                            </div>
                         </>
                     )}
 
@@ -279,7 +291,7 @@ function RegisterPage() {
                             <div className="input-group">
                                 <label className="input-label">IBAN ({getIbanLabel()})</label>
                                 <div className="login-input" style={{ padding: '12px' }}>
-                                    <IbanElement options={{ supportedCountries: ['SEPA'], style: elementStyle }} />
+                                    <IbanElement options={{ supportedCountries: ['SEPA'], placeholderCountry: getIbanLabel(), style: elementStyle }} />
                                 </div>
                             </div>
 
