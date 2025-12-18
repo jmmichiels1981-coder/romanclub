@@ -26,6 +26,9 @@
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
     border: 1px solid #333;
     animation: fadeIn 0.3s ease-out;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
 }
 
 @keyframes fadeIn {
@@ -81,6 +84,9 @@
     line-height: 1.6;
     color: #cccccc;
     margin-bottom: 2rem;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 10px;
 }
 
 .book-highlight {
