@@ -1,23 +1,49 @@
 import { useState, useEffect } from "react";
 import "./welcome.css";
 
+
 function WelcomeModal() {
     const [isVisible, setIsVisible] = useState(false);
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
     useEffect(() => {
-        // Check if the user has already seen the welcome message
-        const hasSeenWelcome = localStorage.getItem("welcomeSeen");
-        // Check if the user is "logged in" (simulated for this task)
-        const isLoggedIn = localStorage.getItem("userLoggedIn");
-
-        if (isLoggedIn && !hasSeenWelcome) {
-            setIsVisible(true);
+        // Read user object from storage
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                // Check welcomeSeen field inside user object
+                // If it is false (or undefined, assuming we want to show it then), show logic.
+                // Our backend ensures it is initialized to false.
+                if (user && user.welcomeSeen === false) {
+                    setIsVisible(true);
+                }
+            } catch (e) {
+                console.error("Error parsing user data", e);
+            }
         }
     }, []);
 
-    const handleClose = () => {
-        localStorage.setItem("welcomeSeen", "true");
+    const handleClose = async () => {
+        // Optimistic update locally
         setIsVisible(false);
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                user.welcomeSeen = true;
+                localStorage.setItem("user", JSON.stringify(user));
+
+                // Persist to backend
+                await fetch(`${API_URL}/update-welcome`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: user.email })
+                });
+            } catch (e) {
+                console.error("Error updating welcome status", e);
+            }
+        }
     };
 
     if (!isVisible) return null;

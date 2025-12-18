@@ -1,15 +1,42 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./login.css";
 
 function LoginPage() {
+    const [email, setEmail] = useState("");
     const navigate = useNavigate();
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        // Simulate successful login
-        localStorage.setItem("userLoggedIn", "true");
-        // Redirect to homepage (or dashboard) where the Welcome Modal will trigger
-        navigate("/");
+
+        try {
+            const response = await fetch(`${API_URL}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Store user info (including welcomeSeen status)
+                localStorage.setItem("user", JSON.stringify(data.user));
+                localStorage.setItem("userLoggedIn", "true"); // Keep for legacy/simple check if needed
+                navigate("/");
+            } else {
+                alert("Erreur de connexion");
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            // Fallback for demo if backend not running locally
+            alert("Erreur de connexion au serveur. Mode démo activé.");
+            // Fallback: create a dummy user
+            const dummyUser = { email, welcomeSeen: false };
+            localStorage.setItem("user", JSON.stringify(dummyUser));
+            localStorage.setItem("userLoggedIn", "true");
+            navigate("/");
+        }
     };
 
     return (
@@ -29,6 +56,8 @@ function LoginPage() {
                             placeholder="votre@email.fr"
                             className="login-input"
                             required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                         />
                     </div>
 
