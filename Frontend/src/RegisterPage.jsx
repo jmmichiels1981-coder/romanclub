@@ -210,7 +210,7 @@ function RegisterPage() {
                         className="login-btn"
                         onClick={() => navigate("/lecture")}
                     >
-                        Accéder à ma Bibliothèque
+                        Vers mon tableau de bord
                     </button>
                 </div>
             </div>
@@ -292,7 +292,7 @@ function RegisterPage() {
                                 fontSize: '0.9rem',
                                 lineHeight: '1.4'
                             }}>
-                                Vos informations de paiement sont entièrement sécurisées et cryptées. Elles ne sont jamais stockées chez nous et sont traitées par un prestataire certifié. Aucun prélèvement ne sera effectué avant le 1er septembre.
+                                Vos informations de paiement sont entièrement sécurisées et cryptées. Elles ne sont jamais stockées chez nous et sont traitées par un prestataire certifié. Aucun prélèvement ne sera effectué avant le 1er juillet 2026.
                             </div>
                         </>
                     )}
