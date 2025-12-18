@@ -23,7 +23,7 @@ function LoginPage() {
                 // Store user info (including welcomeSeen status)
                 localStorage.setItem("user", JSON.stringify(data.user));
                 localStorage.setItem("userLoggedIn", "true"); // Keep for legacy/simple check if needed
-                navigate("/");
+                navigate("/dashboard");
             } else {
                 alert("Erreur de connexion");
             }
@@ -35,7 +35,7 @@ function LoginPage() {
             const dummyUser = { email, welcomeSeen: false };
             localStorage.setItem("user", JSON.stringify(dummyUser));
             localStorage.setItem("userLoggedIn", "true");
-            navigate("/");
+            navigate("/dashboard");
         }
     };
 

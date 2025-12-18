@@ -6,6 +6,7 @@ import Roman from "./Roman";
 import LoginPage from "./LoginPage";
 import WelcomeGiftModal from "./WelcomeGiftModal";
 import RegisterPage from "./RegisterPage";
+import DashboardPage from "./DashboardPage";
 
 /* ======================
    HOME PAGE
@@ -119,6 +120,7 @@ function App() {
           <Route path="/lecture" element={<Reader />} />
 
           {/* Pages annexes */}
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/inscription" element={<RegisterPage />} />
           <Route path="/connexion" element={<LoginPage />} />
           <Route path="/admin" element={<PlaceholderPage title="Admin" />} />

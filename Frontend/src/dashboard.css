@@ -1,0 +1,451 @@
+/* Dashboard Layout */
+.dashboard-container {
+    min-height: 100vh;
+    background-color: #0d0d10;
+    /* Dark background */
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #121215;
+    border-bottom: 1px solid #333;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-logo {
+    height: 40px;
+}
+
+.dashboard-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: #fff;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.user-welcome {
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.btn-logout {
+    background: transparent;
+    border: 1px solid #555;
+    color: #ccc;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.btn-logout:hover {
+    border-color: #888;
+    color: #fff;
+}
+
+.dashboard-main {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Tiles Grid */
+.tiles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.dash-tile {
+    background-color: #1a1a1d;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.dash-tile:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.tile-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.dash-tile h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tile-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-top: 0.5rem;
+}
+
+/* Tile Colors */
+.tile-orange {
+    border-top: 4px solid #ff7700;
+}
+
+.tile-orange h2 {
+    color: #ff7700;
+}
+
+.tile-green {
+    border-top: 4px solid #4caf50;
+}
+
+.tile-green h2,
+.tile-green .tile-value {
+    color: #4caf50;
+}
+
+.tile-yellow {
+    border-top: 4px solid #ffca28;
+}
+
+.tile-yellow h2 {
+    color: #ffca28;
+}
+
+.tile-blue {
+    border-top: 4px solid #2196f3;
+}
+
+.tile-blue h2 {
+    color: #2196f3;
+}
+
+
+/* Detail Views */
+.btn-back {
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.btn-back:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.view-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.5rem;
+}
+
+/* Sections */
+.lib-section,
+.path-section {
+    margin-bottom: 3rem;
+}
+
+.lib-section h3,
+.path-section h3 {
+    font-size: 1.2rem;
+    color: #fff;
+    margin-bottom: 1rem;
+    border-left: 3px solid #666;
+    padding-left: 0.8rem;
+}
+
+/* Cards */
+.book-card {
+    background: #1a1a1d;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.book-info h4 {
+    margin: 0 0 0.3rem 0;
+    font-size: 1.1rem;
+    color: #fff;
+}
+
+.book-info .author {
+    color: #aaa;
+    font-size: 0.9rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.book-info .summary {
+    color: #888;
+    font-size: 0.85rem;
+    margin: 0.5rem 0 0 0;
+    max-width: 600px;
+}
+
+.btn-action {
+    background-color: #ff7700;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-secondary {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 0.5rem;
+}
+
+.book-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.checkbox-container {
+    margin-left: 1rem;
+    font-size: 0.9rem;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+/* Progress Bar */
+.progress-bar-container {
+    background-color: #333;
+    height: 6px;
+    border-radius: 3px;
+    width: 200px;
+    margin: 0.5rem 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background-color: #ff7700;
+    height: 100%;
+}
+
+.status-text {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+/* Stats */
+.stat-highlight {
+    text-align: center;
+    background: #1a1a1d;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border: 1px solid #4caf50;
+    font-size: 1.2rem;
+}
+
+.stat-highlight strong {
+    color: #4caf50;
+    font-size: 1.5rem;
+}
+
+.sub-stat {
+    font-size: 1rem;
+    color: #aaa;
+    margin-top: 0.5rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #333;
+}
+
+.status-pill {
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-right: 1rem;
+}
+
+.status-pill.done {
+    background: #155724;
+    color: #d4edda;
+}
+
+.status-pill.ongoing {
+    background: #fff3cd;
+    color: #856404;
+}
+
+/* Path Distribution */
+.genres-list {
+    list-style: none;
+    padding: 0;
+}
+
+.genres-list li {
+    padding: 0.5rem 0;
+    color: #ddd;
+    border-bottom: 1px solid #222;
+}
+
+.dist-item {
+    margin-bottom: 1.5rem;
+}
+
+.dist-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.dist-bar-bg {
+    height: 4px;
+    background: #333;
+    width: 100%;
+    border-radius: 2px;
+}
+
+.dist-bar-fill {
+    height: 100%;
+    background: #ffca28;
+    border-radius: 2px;
+}
+
+.ai-analysis {
+    font-style: italic;
+    color: #bbb;
+    background: #252525;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #ffca28;
+}
+
+/* Settings */
+.settings-card {
+    background: #1a1a1d;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.setting-row {
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #222;
+    padding-bottom: 1rem;
+}
+
+.setting-row .label {
+    color: #888;
+    display: inline-block;
+    width: 120px;
+}
+
+.status-active {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+.btn-danger {
+    background: #d32f2f;
+    color: #fff;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.hint-text {
+    color: #666;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 600px) {
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .header-right {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .book-actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .book-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

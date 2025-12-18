@@ -208,7 +208,7 @@ function RegisterPage() {
 
                     <button
                         className="login-btn"
-                        onClick={() => navigate("/lecture")}
+                        onClick={() => navigate("/dashboard")}
                     >
                         Vers mon tableau de bord
                     </button>
