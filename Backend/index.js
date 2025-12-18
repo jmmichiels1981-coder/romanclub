@@ -112,13 +112,17 @@ app.post("/login", async (req, res) => {
 // =======================
 // REGISTER (INCHANGÉ)
 /// =======================
+// =======================
+// REGISTER (STRIPE INTEGRE)
+// =======================
 app.post("/register", async (req, res) => {
-  const userData = req.body;
+  const userData = req.body; // Expects { ..., paymentMethodId, paymentMethodType }
 
   if (!db) return res.status(500).json({ error: "Database not connected" });
   if (!userData.email) return res.status(400).json({ error: "Email required" });
 
   try {
+    // 1. Validation de base
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(userData.email)) {
       return res.status(400).json({ success: false, message: "Format d'email invalide." });
@@ -133,63 +137,15 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ success: false, message: "Code PIN invalide (min 4 chiffres)." });
     }
 
-    const pinHash = await bcrypt.hash(userData.pin, 10);
+    // 2. Logique Stripe (Bloquante)
+    // On doit avoir un paymentMethodId venant du frontend
+    if (!userData.paymentMethodId) {
+      return res.status(400).json({ success: false, message: "Moyen de paiement manquant." });
+    }
 
-    const newUser = {
-      ...userData,
-      pinHash,
-      createdAt: new Date(),
-      role: "user",
-      subscriptionStatus: "pending",
-      failedLoginAttempts: 0,
-    };
-
-    const result = await usersCollection.insertOne(newUser);
-    newUser._id = result.insertedId;
-    delete newUser.pinHash;
-
-    res.json({ success: true, user: newUser });
-
-  } catch (error) {
-    console.error("Registration error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// =======================
-// UPDATE WELCOME SEEN
-// =======================
-app.post("/update-welcome", async (req, res) => {
-  const { email } = req.body;
-
-  if (!db) return res.status(500).json({ error: "Database not connected" });
-  if (!email) return res.status(400).json({ error: "Email required" });
-
-  try {
-    await usersCollection.updateOne(
-      { email },
-      { $set: { welcomeSeen: true } }
-    );
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Update error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// =======================
-// STRIPE – CREATE SUBSCRIPTION (ÉTAPE 2)
-// =======================
-app.post("/create-subscription", async (req, res) => {
-  const { email, country } = req.body;
-
-  if (!email || !country) {
-    return res.status(400).json({ error: "Email and country required" });
-  }
-
-  try {
+    // Déterminer le prix selon le pays
     let priceId;
-    switch (country) {
+    switch (userData.pays) {
       case "Suisse":
         priceId = process.env.STRIPE_PRICE_CHF;
         break;
@@ -200,23 +156,67 @@ app.post("/create-subscription", async (req, res) => {
         priceId = process.env.STRIPE_PRICE_EUR;
     }
 
-    const customer = await stripe.customers.create({ email });
+    // Création du Customer Stripe
+    const customer = await stripe.customers.create({
+      email: userData.email,
+      name: `${userData.prenom} ${userData.nom}`,
+      payment_method: userData.paymentMethodId,
+      invoice_settings: {
+        default_payment_method: userData.paymentMethodId,
+      },
+    });
 
+    // Création de l'abonnement avec période d'essai
     const subscription = await stripe.subscriptions.create({
       customer: customer.id,
       items: [{ price: priceId }],
       trial_end: Math.floor(new Date("2026-07-01").getTime() / 1000),
+      expand: ['latest_invoice.payment_intent'],
     });
 
-    res.json({
-      success: true,
-      subscriptionId: subscription.id,
-      customerId: customer.id,
-    });
+    // Si on arrive ici, Stripe a validé (sinon une erreur aurait été levée)
+
+    // 3. Création User en base
+    const pinHash = await bcrypt.hash(userData.pin, 10);
+
+    const newUser = {
+      ...userData,
+      pinHash, // Store hash only
+      pin: undefined,
+      password: undefined,
+      paymentMethodId: undefined, // Don't verify/store raw if not needed, we have stripe IDs now
+      createdAt: new Date(),
+      role: "user",
+
+      // Stripe Data
+      stripeCustomerId: customer.id,
+      stripeSubscriptionId: subscription.id,
+      subscriptionStatus: "active", // Considéré actif car trial/validé
+      subscriptionStart: "2026-07-01",
+      paymentMethodSecurelyStored: true,
+
+      welcomeGiftPending: true,
+      failedLoginAttempts: 0,
+      welcomeSeen: false // Init logic for welcome modal
+    };
+
+    const result = await usersCollection.insertOne(newUser);
+    newUser._id = result.insertedId;
+    delete newUser.pinHash;
+
+    res.json({ success: true, user: newUser });
 
   } catch (error) {
-    console.error("Stripe subscription error:", error);
-    res.status(500).json({ error: "Stripe subscription failed" });
+    console.error("Registration/Stripe error:", error);
+    // Gestion fine des erreurs Stripe
+    if (error.type === 'StripeCardError') {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    if (error.raw && error.raw.message) {
+      return res.status(400).json({ success: false, message: error.raw.message });
+    }
+
+    res.status(500).json({ success: false, message: "Erreur lors de l'inscription (Stripe ou Serveur)." });
   }
 });
 

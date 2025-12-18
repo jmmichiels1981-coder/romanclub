@@ -1,13 +1,38 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement, IbanElement } from "@stripe/react-stripe-js";
 import "./login.css";
+
+// Stripe Element Styles
+const elementStyle = {
+    base: {
+        fontSize: '16px',
+        color: '#fff',
+        '::placeholder': {
+            color: '#aab7c4',
+        },
+        fontFamily: 'inherit',
+        iconColor: '#aab7c4'
+    },
+    invalid: {
+        color: '#fa755a',
+        iconColor: '#fa755a',
+    },
+};
 
 function RegisterPage() {
     const navigate = useNavigate();
+    const stripe = useStripe();
+    const elements = useElements();
+
     // Use environment variable or default to localhost
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
     const [step, setStep] = useState(1); // 1=Form, 2=Payment, 3=Confirmation
+    const [paymentMethod, setPaymentMethod] = useState("card"); // "card" or "sepa"
+    const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+
     const [formData, setFormData] = useState({
         nom: "",
         prenom: "",
@@ -56,21 +81,79 @@ function RegisterPage() {
         setStep(2);
     };
 
-    // Step 2 -> Step 3 (Simulate Payment Success & Calling Backend)
-    const handlePaymentSuccess = async () => {
-        // Here we call the backend to actually register the user
-        const payload = {
-            nom: formData.nom,
-            prenom: formData.prenom,
-            email: formData.email,
-            date_naissance: formData.dateNaissance,
-            sexe: formData.sexe,
-            pays: formData.pays,
-            password: formData.password,
-            pin: formData.pin
+    // Helper to get country code for IBAN label
+    const getIbanLabel = () => {
+        const map = {
+            "France": "FR",
+            "Belgique": "BE",
+            "Luxembourg": "LU",
+            "Suisse": "CH",
+            "Canada": "CA",
+            "Monaco": "MC"
         };
+        return map[formData.pays] || "FR";
+    };
+
+    // Step 2 -> Step 3 (Real Stripe Payment & Backend Call)
+    const handlePaymentSuccess = async () => {
+        setErrorMessage("");
+        setLoading(true);
+
+        if (!stripe || !elements) {
+            setLoading(false);
+            return;
+        }
+
+        let paymentMethodId = null;
 
         try {
+            // 1. Create Payment Method via Stripe
+            if (paymentMethod === 'card') {
+                const cardNumberElement = elements.getElement(CardNumberElement);
+                const { error, paymentMethod: pm } = await stripe.createPaymentMethod({
+                    type: 'card',
+                    card: cardNumberElement,
+                    billing_details: {
+                        name: `${formData.prenom} ${formData.nom}`,
+                        email: formData.email,
+                    },
+                });
+
+                if (error) {
+                    throw new Error(error.message);
+                }
+                paymentMethodId = pm.id;
+
+            } else if (paymentMethod === 'sepa') {
+                const ibanElement = elements.getElement(IbanElement);
+                // Check mandate
+                const mandateCheckbox = document.getElementById("mandate");
+                if (!mandateCheckbox || !mandateCheckbox.checked) {
+                    throw new Error("Veuillez accepter le mandat de prélèvement SEPA.");
+                }
+
+                const { error, paymentMethod: pm } = await stripe.createPaymentMethod({
+                    type: 'sepa_debit',
+                    sepa_debit: ibanElement,
+                    billing_details: {
+                        name: `${formData.prenom} ${formData.nom}`,
+                        email: formData.email,
+                    },
+                });
+
+                if (error) {
+                    throw new Error(error.message);
+                }
+                paymentMethodId = pm.id;
+            }
+
+            // 2. Call Backend to Create User & Subscription
+            const payload = {
+                ...formData,
+                paymentMethodId: paymentMethodId,
+                paymentMethodType: paymentMethod
+            };
+
             const response = await fetch(`${API_URL}/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -85,18 +168,19 @@ function RegisterPage() {
             }
 
             if (response.ok && data.success) {
-                // Auto-login locally if needed or just show confirmation
+                // Success!
                 localStorage.setItem("user", JSON.stringify(data.user));
                 localStorage.setItem("userLoggedIn", "true");
                 setStep(3);
             } else {
-                alert("Erreur: " + (data.message || "Échec de l'inscription"));
+                throw new Error(data.message || "Échec de l'inscription côté serveur.");
             }
+
         } catch (error) {
-            console.error("Registration error:", error);
-            // Fallback for simulation if backend is down
-            alert("Mode simulation (Backend inaccessible)");
-            setStep(3);
+            console.error("Payment error:", error);
+            setErrorMessage(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -122,21 +206,6 @@ function RegisterPage() {
         );
     }
 
-    const [paymentMethod, setPaymentMethod] = useState("card"); // "card" or "sepa"
-
-    // Helper to get country code for IBAN label
-    const getIbanLabel = () => {
-        const map = {
-            "France": "FR",
-            "Belgique": "BE",
-            "Luxembourg": "LU",
-            "Suisse": "CH",
-            "Canada": "CA",
-            "Monaco": "MC"
-        };
-        return map[formData.pays] || "FR";
-    };
-
     if (step === 2) {
         return (
             <div className="login-container">
@@ -154,6 +223,8 @@ function RegisterPage() {
                         Votre inscription vous permet simplement d’activer votre accès dès maintenant, sans aucun frais immédiat.<br />
                         Vous serez bien entendu averti avant tout renouvellement ou prélèvement.
                     </div>
+
+                    {errorMessage && <div className="error-message" style={{ color: 'red', marginBottom: '1rem' }}>{errorMessage}</div>}
 
                     <div className="input-group">
                         <label className="payment-label">Mode de paiement</label>
@@ -178,9 +249,15 @@ function RegisterPage() {
                             <div className="input-group">
                                 <label className="input-label">Informations de carte bancaire</label>
                                 <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                    <input type="text" placeholder="Numéro de carte" className="login-input" style={{ flex: 2 }} />
-                                    <input type="text" placeholder="MM/AA" className="login-input" style={{ flex: 1 }} />
-                                    <input type="text" placeholder="CVC" className="login-input" style={{ flex: 1 }} />
+                                    <div className="login-input" style={{ flex: 2, padding: '12px' }}>
+                                        <CardNumberElement options={{ style: elementStyle }} />
+                                    </div>
+                                    <div className="login-input" style={{ flex: 1, padding: '12px' }}>
+                                        <CardExpiryElement options={{ style: elementStyle }} />
+                                    </div>
+                                    <div className="login-input" style={{ flex: 1, padding: '12px' }}>
+                                        <CardCvcElement options={{ style: elementStyle }} />
+                                    </div>
                                 </div>
                             </div>
 
@@ -201,7 +278,9 @@ function RegisterPage() {
                         <>
                             <div className="input-group">
                                 <label className="input-label">IBAN ({getIbanLabel()})</label>
-                                <input type="text" placeholder={`${getIbanLabel()}XX XXXX XXXX XXXX XXXX XXXX XXX`} className="login-input" />
+                                <div className="login-input" style={{ padding: '12px' }}>
+                                    <IbanElement options={{ supportedCountries: ['SEPA'], style: elementStyle }} />
+                                </div>
                             </div>
 
                             <div className="mandate-row">
@@ -219,11 +298,17 @@ function RegisterPage() {
                         <button
                             className="btn-secondary"
                             onClick={() => setStep(1)}
+                            disabled={loading}
                         >
                             Retour
                         </button>
-                        <button className="login-btn" style={{ marginTop: 0, flex: 2 }} onClick={handlePaymentSuccess}>
-                            CRÉER MON COMPTE
+                        <button
+                            className="login-btn"
+                            style={{ marginTop: 0, flex: 2, opacity: loading ? 0.7 : 1 }}
+                            onClick={handlePaymentSuccess}
+                            disabled={loading || !stripe}
+                        >
+                            {loading ? "TRAITEMENT..." : "CRÉER MON COMPTE"}
                         </button>
                     </div>
                 </div>

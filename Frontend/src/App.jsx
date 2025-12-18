@@ -99,25 +99,32 @@ function PlaceholderPage({ title }) {
 
 import WelcomeModal from "./WelcomeModal";
 
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+
+const stripePromise = loadStripe("pk_test_51STHOn7NHZXHRYC2Firv50CpKpG0B3JQyGJY4M5TEmVhdwMxyOJot435PWRH6vXwAYRKdrq44vwEPU9MZw5A2OfD00coVyymF4");
+
 function App() {
   return (
-    <Router>
-      <WelcomeModal />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
+    <Elements stripe={stripePromise}>
+      <Router>
+        <WelcomeModal />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
 
-        {/* Routes structurelles (contenu branché plus tard) */}
-        <Route path="/roman" element={<Roman />} />
-        <Route path="/lecture" element={<Reader />} />
+          {/* Routes structurelles (contenu branché plus tard) */}
+          <Route path="/roman" element={<Roman />} />
+          <Route path="/lecture" element={<Reader />} />
 
-        {/* Pages annexes */}
-        <Route path="/inscription" element={<RegisterPage />} />
-        <Route path="/connexion" element={<LoginPage />} />
-        <Route path="/admin" element={<PlaceholderPage title="Admin" />} />
-        <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
-        <Route path="/mentions" element={<PlaceholderPage title="Mentions légales" />} />
-      </Routes>
-    </Router>
+          {/* Pages annexes */}
+          <Route path="/inscription" element={<RegisterPage />} />
+          <Route path="/connexion" element={<LoginPage />} />
+          <Route path="/admin" element={<PlaceholderPage title="Admin" />} />
+          <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
+          <Route path="/mentions" element={<PlaceholderPage title="Mentions légales" />} />
+        </Routes>
+      </Router>
+    </Elements>
   );
 }
 
