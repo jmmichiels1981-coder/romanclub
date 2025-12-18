@@ -314,7 +314,7 @@ app.use(express.static(frontendPath));
 
 // API routes are defined above.
 // Anything else that doesn't match an API route is sent to the React frontend.
-app.get("*", (req, res) => {
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
