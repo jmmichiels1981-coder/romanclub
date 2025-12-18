@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import WelcomeModal from './WelcomeModal';
 import './dashboard.css';
 
 const DashboardPage = () => {
@@ -195,6 +196,7 @@ const DashboardPage = () => {
 
     return (
         <div className="dashboard-container">
+            <WelcomeModal />
             <header className="dashboard-header">
                 <div className="header-left">
                     <img src="/logo.png" alt="Logo" className="header-logo" />

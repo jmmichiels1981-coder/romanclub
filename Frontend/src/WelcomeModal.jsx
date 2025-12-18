@@ -99,10 +99,20 @@ function WelcomeModal() {
                     <p className="welcome-text">
                         À partir du 1er juillet 2026 :
                     </p>
-                    <ul className="welcome-list">
-                        <li>Abonnement : 15 € / mois</li>
-                        <li>4 romans par mois, soit 3,75 € par roman</li>
-                    </ul>
+                    <div className="welcome-list" style={{ listStyle: 'none', paddingLeft: 0 }}>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <strong>Abonnement : 15 € / mois (France, Belgique, Luxembourg)</strong><br />
+                            4 romans par mois, soit 3,75 € par roman
+                        </div>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <strong>Abonnement : 14 CHF / mois (Suisse)</strong><br />
+                            4 romans par mois, soit 3,50 CHF par roman
+                        </div>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <strong>Abonnement : 25 CAD / mois (Canada)</strong><br />
+                            4 romans par mois, soit 6,25 CAD par roman
+                        </div>
+                    </div>
                     <p className="welcome-text">
                         RomanClub s’engage pour une rémunération juste des auteurs :
                         <br />

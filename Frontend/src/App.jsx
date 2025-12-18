@@ -98,7 +98,7 @@ function PlaceholderPage({ title }) {
    APP
    ====================== */
 
-import WelcomeModal from "./WelcomeModal";
+
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -111,7 +111,6 @@ function App() {
   return (
     <Elements stripe={stripePromise}>
       <Router>
-        <WelcomeModal />
         <Routes>
           <Route path="/" element={<HomePage />} />
 
