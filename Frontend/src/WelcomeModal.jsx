@@ -2,11 +2,15 @@ import { useState, useEffect } from "react";
 import "./welcome.css";
 
 
-function WelcomeModal() {
-    const [isVisible, setIsVisible] = useState(false);
+function WelcomeModal({ onClose, manualTrigger = false }) {
+    const [isVisible, setIsVisible] = useState(manualTrigger); // Start visible if manual
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
     useEffect(() => {
+        if (manualTrigger) {
+            setIsVisible(true);
+            return;
+        }
         // Read user object from storage
         const userStr = localStorage.getItem("user");
         if (userStr) {
@@ -25,10 +29,14 @@ function WelcomeModal() {
     }, []);
 
     const handleClose = async () => {
-        // Optimistic update locally
         setIsVisible(false);
+        if (onClose) {
+            onClose();
+        }
+
+        // Only try to update user if logged in (user exists in storage)
         const userStr = localStorage.getItem("user");
-        if (userStr) {
+        if (userStr && !manualTrigger) { // Don't mistakenly update if just viewing as guest
             try {
                 const user = JSON.parse(userStr);
                 user.welcomeSeen = true;

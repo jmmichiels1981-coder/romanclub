@@ -7,6 +7,7 @@ import LoginPage from "./LoginPage";
 import WelcomeGiftModal from "./WelcomeGiftModal";
 import RegisterPage from "./RegisterPage";
 import DashboardPage from "./DashboardPage";
+import WelcomeModal from "./WelcomeModal";
 
 /* ======================
    HOME PAGE
@@ -15,6 +16,39 @@ import DashboardPage from "./DashboardPage";
 function HomePage() {
   const navigate = useNavigate(); // Need this for redirection
   const [showGiftModal, setShowGiftModal] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false); // New state for login welcome
+
+  const handleLoginClick = (e) => {
+    e.preventDefault();
+    const hasWelcomeSeen = localStorage.getItem("welcomeSeen");
+    // Logic: Always show if not seen? Or just show it. User said: "page de message de première connexion apparait"
+    // I'll assume standard 'first time' logic or forced logic.
+    // User wording: "quand le client clique sur se connecter, la page de message de première connexion apparait"
+    // Implicitly: if not seen before? Or always? Usually "Première connexion" implies once. 
+    // I will check localStorage.
+    if (hasWelcomeSeen === "true") {
+      navigate("/connexion");
+    } else {
+      setShowWelcomeModal(true);
+    }
+  };
+
+  const handleCloseWelcomeModal = () => {
+    // Mark as seen is handled inside modal? 
+    // Current WelcomeModal handles its own state update and closing?
+    // Wait, WelcomeModal was modifying 'user' object in localStorage.
+    // But here user is not logged in yet!
+    // I should update WelcomeModal to handle this "pre-login" scenario or use a simpler logic here.
+    // Actually, WelcomeModal logic relies on `user` object being present (lines 10-24 in WelcomeModal).
+    // If I show it BEFORE login, `user` is null.
+    // I need to modify WelcomeModal to support "Guest Mode" or "Pre-login Mode".
+    // Let's just pass a prop `onClose` to WelcomeModal that overrides default behavior?
+    // Or just handle the simple "OK" click.
+
+    localStorage.setItem("welcomeSeen", "true"); // Simple key for pre-login
+    setShowWelcomeModal(false);
+    navigate("/connexion");
+  };
 
   const handleInscriptionClick = (e) => {
     e.preventDefault();
@@ -36,6 +70,7 @@ function HomePage() {
   return (
     <div className="container">
       {showGiftModal && <WelcomeGiftModal onClose={handleCloseGiftModal} />}
+      {showWelcomeModal && <WelcomeModal onClose={handleCloseWelcomeModal} manualTrigger={true} />}
       <img src="/logo.png" alt="RomanClub Logo" className="logo" />
       <h1>ROMANCLUB</h1>
       <p className="subtitle">
@@ -62,9 +97,9 @@ function HomePage() {
           S’INSCRIRE GRATUITEMENT
         </a>
 
-        <Link to="/connexion" className="btn btn-secondary">
+        <a href="/connexion" onClick={handleLoginClick} className="btn btn-secondary">
           SE CONNECTER
-        </Link>
+        </a>
       </div>
 
       <footer className="footer">
