@@ -32,10 +32,11 @@ function LoginPage() {
             const data = await response.json();
 
             if (data.success) {
-                // Store user info (including welcomeSeen status)
+                // Store user info and token
                 localStorage.setItem("user", JSON.stringify(data.user));
-                localStorage.setItem("userLoggedIn", "true"); // Keep for legacy/simple check if needed
-                localStorage.setItem("savedEmail", email); // Persist email for future logins
+                localStorage.setItem("userLoggedIn", "true");
+                localStorage.setItem("authToken", data.token); // Store JWT token
+                localStorage.setItem("savedEmail", email);
                 navigate("/dashboard");
             } else {
                 alert("Erreur de connexion : " + (data.message || "Identifiants incorrects"));

@@ -1,13 +1,15 @@
 ﻿const express = require("express");
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const Stripe = require("stripe");
 const bodyParser = require("body-parser");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey_romanclub_2025"; // Fallback for dev
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -44,6 +46,27 @@ async function connectDB() {
 
 connectDB();
 
+// Middleware d'authentification JWT
+const requireAuth = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header required" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ error: "Token required" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded; // { userId, email, role }
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+};
+
 app.get("/", (req, res) => {
   res.send("RomanClub backend is running");
 });
@@ -57,7 +80,7 @@ app.get("/health", (req, res) => {
 });
 
 // =======================
-// LOGIN
+// LOGIN (WITH JWT)
 // =======================
 app.post("/login", async (req, res) => {
   const { email, pin } = req.body;
@@ -104,7 +127,14 @@ app.post("/login", async (req, res) => {
     const safeUser = { ...user };
     delete safeUser.pinHash;
 
-    res.json({ success: true, user: safeUser });
+    // Generate JWT
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, role: user.role || "user" },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({ success: true, user: safeUser, token });
 
   } catch (error) {
     console.error("Login error:", error);
@@ -113,8 +143,171 @@ app.post("/login", async (req, res) => {
 });
 
 // =======================
-// REGISTER (STRIPE INTEGRE)
+// SETTINGS / USER ENDPOINTS (PROTECTED)
 // =======================
+
+// 1. GET User Data
+app.get("/me", requireAuth, async (req, res) => {
+  try {
+    const user = await usersCollection.findOne({ _id: new ObjectId(req.user.userId) });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Format data for frontend settings
+    const userData = {
+      prenom: user.prenom,
+      nom: user.nom,
+      email: user.email,
+      dateInscription: user.createdAt, // Or format it if needed
+      subscriptionStatus: user.subscriptionStatus || "active",
+      paymentMethodType: user.paymentMethodType || "card",
+      paymentMethodId: user.paymentMethodId,
+      stripeCustomerId: user.stripeCustomerId
+    };
+
+    res.json(userData);
+  } catch (error) {
+    console.error("GET /me error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 2. UPDATE Email
+app.put("/me/email", requireAuth, async (req, res) => {
+  const { newEmail } = req.body;
+  if (!newEmail) return res.status(400).json({ error: "New email required" });
+
+  try {
+    const user = await usersCollection.findOne({ _id: new ObjectId(req.user.userId) });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Check if email already exists
+    const existing = await usersCollection.findOne({ email: newEmail });
+    if (existing) return res.status(400).json({ error: "Email already in use" });
+
+    // Update Stripe Customer if exists
+    if (user.stripeCustomerId) {
+      await stripe.customers.update(user.stripeCustomerId, { email: newEmail });
+    }
+
+    // Update MongoDB
+    await usersCollection.updateOne(
+      { _id: user._id },
+      { $set: { email: newEmail } }
+    );
+
+    res.json({ success: true, message: "Email updated successfully" });
+  } catch (error) {
+    console.error("Update email error:", error);
+    res.status(500).json({ error: "Update failed" });
+  }
+});
+
+// 3. GET Stripe Invoices
+app.get("/billing/invoices", requireAuth, async (req, res) => {
+  try {
+    const user = await usersCollection.findOne({ _id: new ObjectId(req.user.userId) });
+    if (!user || !user.stripeCustomerId) {
+      return res.json({ invoices: [] }); // Or error if strict
+    }
+
+    // Fetch invoices from Stripe
+    const invoices = await stripe.invoices.list({
+      customer: user.stripeCustomerId,
+      limit: 10,
+    });
+
+    // Format for frontend
+    const formattedInvoices = invoices.data.map(inv => ({
+      id: inv.id,
+      date: inv.created, // timestamp
+      amount: inv.total, // in cents
+      currency: inv.currency,
+      status: inv.status,
+      pdf: inv.invoice_pdf
+    }));
+
+    res.json({ invoices: formattedInvoices });
+  } catch (error) {
+    console.error("Fetch invoices error:", error);
+    res.status(500).json({ error: "Failed to fetch invoices" });
+  }
+});
+
+// 4. Create Setup Intent (for Payment Method Update)
+app.post("/billing/create-setup-intent", requireAuth, async (req, res) => {
+  try {
+    const user = await usersCollection.findOne({ _id: new ObjectId(req.user.userId) });
+    if (!user || !user.stripeCustomerId) return res.status(400).json({ error: "No customer ID" });
+
+    const setupIntent = await stripe.setupIntents.create({
+      customer: user.stripeCustomerId,
+      payment_method_types: ['card', 'sepa_debit'],
+    });
+
+    res.json({ clientSecret: setupIntent.client_secret });
+  } catch (error) {
+    console.error("Create SetupIntent error:", error);
+    res.status(500).json({ error: "Setup failed" });
+  }
+});
+
+// 5. Finalize Update Payment Method
+app.post("/billing/update-payment-method", requireAuth, async (req, res) => {
+  const { paymentMethodId, paymentMethodType } = req.body;
+  if (!paymentMethodId) return res.status(400).json({ error: "Payment Method ID required" });
+
+  try {
+    const user = await usersCollection.findOne({ _id: new ObjectId(req.user.userId) });
+    if (!user || !user.stripeCustomerId) return res.status(400).json({ error: "User context invalid" });
+
+    // Update Stripe Customer Default Payment Method
+    await stripe.customers.update(user.stripeCustomerId, {
+      invoice_settings: { default_payment_method: paymentMethodId },
+    });
+
+    // Update MongoDB
+    await usersCollection.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          paymentMethodId: paymentMethodId,
+          paymentMethodType: paymentMethodType || 'card',
+          updatedAt: new Date()
+        }
+      }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Update PM error:", error);
+    res.status(500).json({ error: "Update failed" });
+  }
+});
+
+// 6. Global Info (count books)
+app.get("/books/count", requireAuth, async (req, res) => {
+  try {
+    // Assuming 'books' collection exists or using a dummy logic if not yet populated
+    // If books collection doesn't exist, we can default to 0
+    const booksCount = await db.collection("books").countDocuments({}) || 0;
+
+    // For now, if 0, maybe return a hardcoded realistic number as placeholder if collection is empty 
+    // but user requested "calculé côté backend".
+    // We'll stick to actual count.
+
+    res.json({ count: booksCount });
+  } catch (error) {
+    console.error("Count books error:", error);
+    res.status(500).json({ error: "Error counting books" });
+  }
+});
+
+
+// =======================
+// EXISTING ENDPOINTS (UNCHANGED LOGIC)
+// =======================
+
+// REGISTER (STRIPE INTEGRE)
 app.post("/register", async (req, res) => {
   const userData = req.body; // Expects { ..., paymentMethodId, paymentMethodType }
 
@@ -220,9 +413,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// =======================
 // UPDATE WELCOME SEEN
-// =======================
 app.post("/update-welcome", async (req, res) => {
   const { email } = req.body;
 
@@ -241,9 +432,7 @@ app.post("/update-welcome", async (req, res) => {
   }
 });
 
-// =======================
 // CONTACT FORM
-// =======================
 app.post("/contact", async (req, res) => {
   const contactData = req.body;
 
@@ -274,9 +463,7 @@ app.post("/contact", async (req, res) => {
   }
 });
 
-// =======================
-// STRIPE WEBHOOK (ÉTAPE 3)
-// =======================
+// STRIPE WEBHOOK
 app.post("/webhook", bodyParser.raw({ type: "application/json" }), async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
