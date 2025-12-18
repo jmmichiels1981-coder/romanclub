@@ -217,12 +217,12 @@ function RegisterPage() {
                             value={formData.pays}
                             onChange={handleChange}
                         >
-                            <option value="France">France</option>
-                            <option value="Belgique">Belgique</option>
-                            <option value="Luxembourg">Luxembourg</option>
-                            <option value="Suisse">Suisse</option>
-                            <option value="Canada">Canada</option>
-                            <option value="Monaco">Monaco</option>
+                            <option value="France">France - Gratuit jusqu'au 30/06/2026 ensuite 15€/mois àpd du 01/07/2026</option>
+                            <option value="Belgique">Belgique - Gratuit jusqu'au 30/06/2026 ensuite 15€/mois àpd du 01/07/2026</option>
+                            <option value="Luxembourg">Luxembourg - Gratuit jusqu'au 30/06/2026 ensuite 15€/mois àpd du 01/07/2026</option>
+                            <option value="Suisse">Suisse - Gratuit jusqu'au 30/06/2026 ensuite 14CHF/mois àpd du 01/07/2026</option>
+                            <option value="Canada">Canada - Gratuit jusqu'au 30/06/2026 ensuite 25CAD/mois àpd du 01/07/2026</option>
+                            <option value="Monaco">Monaco - Gratuit jusqu'au 30/06/2026 ensuite 15€/mois àpd du 01/07/2026</option>
                         </select>
                     </div>
 
