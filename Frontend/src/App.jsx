@@ -1,8 +1,10 @@
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import "./index.css";
 import Reader from "./Reader";
 import Roman from "./Roman";
 import LoginPage from "./LoginPage";
+import WelcomeGiftModal from "./WelcomeGiftModal";
 import RegisterPage from "./RegisterPage";
 
 /* ======================
@@ -10,8 +12,29 @@ import RegisterPage from "./RegisterPage";
    ====================== */
 
 function HomePage() {
+  const navigate = useNavigate(); // Need this for redirection
+  const [showGiftModal, setShowGiftModal] = useState(false);
+
+  const handleInscriptionClick = (e) => {
+    e.preventDefault();
+    const hasSeenGift = localStorage.getItem("welcomeGiftSeen");
+
+    if (hasSeenGift === "true") {
+      navigate("/inscription");
+    } else {
+      setShowGiftModal(true);
+    }
+  };
+
+  const handleCloseGiftModal = () => {
+    localStorage.setItem("welcomeGiftSeen", "true");
+    setShowGiftModal(false);
+    navigate("/inscription");
+  };
+
   return (
     <div className="container">
+      {showGiftModal && <WelcomeGiftModal onClose={handleCloseGiftModal} />}
       <img src="/logo.png" alt="RomanClub Logo" className="logo" />
       <h1>ROMANCLUB</h1>
       <p className="subtitle">
@@ -34,9 +57,9 @@ function HomePage() {
       </div>
 
       <div className="actions">
-        <Link to="/inscription" className="btn btn-primary">
+        <a href="/inscription" onClick={handleInscriptionClick} className="btn btn-primary">
           S’INSCRIRE GRATUITEMENT
-        </Link>
+        </a>
 
         <Link to="/connexion" className="btn btn-secondary">
           SE CONNECTER
