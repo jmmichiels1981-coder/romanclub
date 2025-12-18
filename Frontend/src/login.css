@@ -174,3 +174,54 @@
 .footer-links a:hover {
     text-decoration: underline;
 }
+
+/* Registration specific additions */
+select.login-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.2em;
+    cursor: pointer;
+}
+
+/* Fix for date input color scheme */
+.login-input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+.gender-selector {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+}
+
+.gender-btn {
+    flex: 1;
+    padding: 0.8rem;
+    border-radius: 50px;
+    border: 1px solid #2a2a2e;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.95rem;
+    outline: none;
+}
+
+.gender-btn.active {
+    background: linear-gradient(90deg, #ff7700, #ff5500);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 15px rgba(255, 85, 0, 0.3);
+}
+
+.gender-btn:hover:not(.active) {
+    border-color: #555;
+    color: #ccc;
+}

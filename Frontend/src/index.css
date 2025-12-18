@@ -145,3 +145,38 @@ h1 {
   object-fit: cover;
   margin-bottom: 1.5rem;
 }
+
+/* Form Styles */
+.form-group {
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 1rem;
+}
+
+.input-field {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 50px;
+  color: white;
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-field:focus {
+  border-color: var(--primary-color);
+}
+
+.forgot-password {
+  display: block;
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 1.5rem;
+  text-decoration: none;
+  align-self: flex-end;
+  /* If in a flex container */
+  margin-right: 1rem;
+}

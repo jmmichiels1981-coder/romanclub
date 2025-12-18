@@ -3,6 +3,7 @@ import "./index.css";
 import Reader from "./Reader";
 import Roman from "./Roman";
 import LoginPage from "./LoginPage";
+import RegisterPage from "./RegisterPage";
 
 /* ======================
    HOME PAGE
@@ -87,7 +88,7 @@ function App() {
         <Route path="/lecture" element={<Reader />} />
 
         {/* Pages annexes */}
-        <Route path="/inscription" element={<PlaceholderPage title="Inscription" />} />
+        <Route path="/inscription" element={<RegisterPage />} />
         <Route path="/connexion" element={<LoginPage />} />
         <Route path="/admin" element={<PlaceholderPage title="Admin" />} />
         <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
