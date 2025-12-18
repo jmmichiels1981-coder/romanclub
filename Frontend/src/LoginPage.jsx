@@ -7,6 +7,9 @@ function LoginPage() {
     const navigate = useNavigate();
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+    const [password, setPassword] = useState("");
+    const [pin, setPin] = useState("");
+
     const handleLogin = async (e) => {
         e.preventDefault();
 
@@ -14,7 +17,7 @@ function LoginPage() {
             const response = await fetch(`${API_URL}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email })
+                body: JSON.stringify({ email, password, pin })
             });
 
             const data = await response.json();
@@ -25,17 +28,12 @@ function LoginPage() {
                 localStorage.setItem("userLoggedIn", "true"); // Keep for legacy/simple check if needed
                 navigate("/dashboard");
             } else {
-                alert("Erreur de connexion");
+                alert("Erreur de connexion : " + (data.message || "Identifiants incorrects"));
             }
         } catch (error) {
             console.error("Login error:", error);
             // Fallback for demo if backend not running locally
-            alert("Erreur de connexion au serveur. Mode démo activé.");
-            // Fallback: create a dummy user
-            const dummyUser = { email, welcomeSeen: false };
-            localStorage.setItem("user", JSON.stringify(dummyUser));
-            localStorage.setItem("userLoggedIn", "true");
-            navigate("/dashboard");
+            alert("Erreur de connexion au serveur.");
         }
     };
 
@@ -68,6 +66,8 @@ function LoginPage() {
                             placeholder="......."
                             className="login-input"
                             required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
 
@@ -79,6 +79,8 @@ function LoginPage() {
                             maxLength={4}
                             className="login-input"
                             required
+                            value={pin}
+                            onChange={(e) => setPin(e.target.value)}
                         />
                     </div>
 
