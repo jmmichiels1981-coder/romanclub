@@ -11,7 +11,10 @@ const MONGODB_URI = process.env.MONGODB_URI;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-app.use(cors());
+app.use(cors({
+  origin: ["https://app-romanclub.com", "http://localhost:5173", "http://localhost:3000"],
+  credentials: true
+}));
 
 // IMPORTANT: on ne doit PAS parser en JSON la route /webhook (Stripe a besoin du RAW body)
 // Donc on ajoute un middleware conditionnel :
