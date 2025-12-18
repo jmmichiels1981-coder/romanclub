@@ -113,9 +113,6 @@ app.post("/login", async (req, res) => {
 });
 
 // =======================
-// REGISTER (INCHANGÉ)
-/// =======================
-// =======================
 // REGISTER (STRIPE INTEGRE)
 // =======================
 app.post("/register", async (req, res) => {
@@ -220,6 +217,60 @@ app.post("/register", async (req, res) => {
     }
 
     res.status(500).json({ success: false, message: "Erreur lors de l'inscription (Stripe ou Serveur)." });
+  }
+});
+
+// =======================
+// UPDATE WELCOME SEEN
+// =======================
+app.post("/update-welcome", async (req, res) => {
+  const { email } = req.body;
+
+  if (!db) return res.status(500).json({ error: "Database not connected" });
+  if (!email) return res.status(400).json({ error: "Email required" });
+
+  try {
+    await usersCollection.updateOne(
+      { email },
+      { $set: { welcomeSeen: true } }
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Update error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// =======================
+// CONTACT FORM
+// =======================
+app.post("/contact", async (req, res) => {
+  const contactData = req.body;
+
+  // Simple validation
+  if (!contactData.email || !contactData.message) {
+    return res.status(400).json({ success: false, message: "Email et message requis" });
+  }
+
+  try {
+    const messageDoc = {
+      ...contactData,
+      recipient: "contact@app-romanclub.com", // The requested recipient address
+      createdAt: new Date(),
+      status: "unread"
+    };
+
+    // Store in dedicated collection
+    const contactsCollection = db.collection("contacts");
+    await contactsCollection.insertOne(messageDoc);
+
+    // Simulation d'envoi d'email
+    console.log(`📩 Nouveau message contact reçu de ${contactData.email} pour contact@app-romanclub.com`);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Contact error:", error);
+    res.status(500).json({ success: false, message: "Erreur serveur" });
   }
 });
 

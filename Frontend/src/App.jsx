@@ -104,6 +104,8 @@ import { loadStripe } from '@stripe/stripe-js';
 
 const stripePromise = loadStripe("pk_test_51STHOn7NHZXHRYC2Firv50CpKpG0B3JQyGJY4M5TEmVhdwMxyOJot435PWRH6vXwAYRKdrq44vwEPU9MZw5A2OfD00coVyymF4");
 
+import ContactPage from "./ContactPage";
+
 function App() {
   return (
     <Elements stripe={stripePromise}>
@@ -112,7 +114,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
 
-          {/* Routes structurelles (contenu branché plus tard) */}
+          {/* Routes structurelles */}
           <Route path="/roman" element={<Roman />} />
           <Route path="/lecture" element={<Reader />} />
 
@@ -120,7 +122,7 @@ function App() {
           <Route path="/inscription" element={<RegisterPage />} />
           <Route path="/connexion" element={<LoginPage />} />
           <Route path="/admin" element={<PlaceholderPage title="Admin" />} />
-          <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/mentions" element={<PlaceholderPage title="Mentions légales" />} />
         </Routes>
       </Router>
