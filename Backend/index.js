@@ -223,7 +223,7 @@ app.post("/create-subscription", async (req, res) => {
 // =======================
 // STRIPE WEBHOOK (ÉTAPE 3)
 // =======================
-app.post("/webhook", bodyParser.raw({ type: "application/json" }), (req, res) => {
+app.post("/webhook", bodyParser.raw({ type: "application/json" }), async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
 
@@ -238,21 +238,72 @@ app.post("/webhook", bodyParser.raw({ type: "application/json" }), (req, res) =>
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  switch (event.type) {
-    case "customer.subscription.created":
-      console.log("✅ Abonnement Stripe créé");
-      break;
+  // Handle the event
+  try {
+    switch (event.type) {
+      case "customer.subscription.created":
+        // Update user status and save IDs
+        const subscription = event.data.object;
+        const stripeCustomerId = subscription.customer;
+        const stripeSubscriptionId = subscription.id;
 
-    case "invoice.paid":
-      console.log("💰 Facture payée");
-      break;
+        // We need email to find user if stripeCustomerId is not yet saved
+        // Retrieve customer from Stripe to get email
+        const customer = await stripe.customers.retrieve(stripeCustomerId);
+        const email = customer.email;
 
-    case "invoice.payment_failed":
-      console.log("❌ Paiement échoué");
-      break;
+        if (email) {
+          await usersCollection.updateOne(
+            { email: email },
+            {
+              $set: {
+                subscriptionStatus: "active",
+                stripeCustomerId: stripeCustomerId,
+                stripeSubscriptionId: stripeSubscriptionId,
+                updatedAt: new Date()
+              }
+            }
+          );
+          console.log(`✅ User ${email} activated with Sub ID ${stripeSubscriptionId}`);
+        }
+        break;
 
-    default:
-      console.log(`ℹ️ Événement Stripe reçu : ${event.type}`);
+      case "invoice.paid":
+        // Update payment status
+        const invoicePaid = event.data.object;
+        await usersCollection.updateOne(
+          { stripeCustomerId: invoicePaid.customer },
+          {
+            $set: {
+              lastPaymentStatus: "paid",
+              updatedAt: new Date()
+            }
+          }
+        );
+        console.log(`💰 Payment confirmed for Customer ${invoicePaid.customer}`);
+        break;
+
+      case "invoice.payment_failed":
+        // Update status to payment_issue
+        const invoiceFailed = event.data.object;
+        await usersCollection.updateOne(
+          { stripeCustomerId: invoiceFailed.customer },
+          {
+            $set: {
+              subscriptionStatus: "payment_issue",
+              updatedAt: new Date()
+            }
+          }
+        );
+        console.log(`❌ Payment failed for Customer ${invoiceFailed.customer}`);
+        break;
+
+      default:
+        console.log(`ℹ️ Unhandled Stripe event: ${event.type}`);
+    }
+  } catch (err) {
+    console.error("Webhook processing error:", err);
+    // Don't fail the webhook response to Stripe, log it locally
   }
 
   res.json({ received: true });
