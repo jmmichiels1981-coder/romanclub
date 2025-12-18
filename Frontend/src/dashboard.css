@@ -385,7 +385,7 @@
     border-left: 4px solid #ffca28;
 }
 
-/* Settings */
+/* Settings Styles Refined */
 .settings-card {
     background: #1a1a1d;
     padding: 2rem;
@@ -397,32 +397,221 @@
     margin-bottom: 1rem;
     border-bottom: 1px solid #222;
     padding-bottom: 1rem;
+    display: flex;
+    align-items: center;
 }
 
 .setting-row .label {
     color: #888;
-    display: inline-block;
-    width: 120px;
+    width: 140px;
+    flex-shrink: 0;
 }
 
-.status-active {
-    color: #4caf50;
-    font-weight: bold;
+.email-row {
+    align-items: flex-start;
 }
 
-.btn-danger {
+.email-edit-form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+}
+
+.edit-input {
+    background: #333;
+    border: 1px solid #555;
+    color: #fff;
+    padding: 0.5rem;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.edit-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-small-confirm {
+    background: #4caf50;
+    color: #fff;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.btn-small-cancel {
     background: #d32f2f;
     color: #fff;
     border: none;
-    padding: 0.8rem 1.5rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.btn-text-action {
+    background: none;
+    border: none;
+    color: #2196f3;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-left: 10px;
+}
+
+.btn-text-cancel {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.status-message-small {
+    background: #333;
+    color: #4caf50;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    margin-top: -15px;
+    /* Pull closer to above element */
+    margin-bottom: 15px;
+}
+
+/* Payment Update Form */
+.payment-update-form {
+    background: #222;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.payment-update-form h4 {
+    margin-top: 0;
+    color: #fff;
+    margin-bottom: 1rem;
+}
+
+.payment-tabs-mini {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #444;
+}
+
+.payment-tabs-mini span {
+    padding-bottom: 0.5rem;
+    cursor: pointer;
+    color: #888;
+    border-bottom: 2px solid transparent;
+}
+
+.payment-tabs-mini span.active {
+    color: #fff;
+    border-bottom: 2px solid #2196f3;
+}
+
+.form-actions {
+    margin-top: 1rem;
+}
+
+.btn-primary {
+    background: #2196f3;
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1.2rem;
     border-radius: 4px;
     cursor: pointer;
 }
 
-.hint-text {
+/* Settings Navigation Buttons */
+.settings-nav-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.settings-nav-btn {
+    background: #1a1a1d;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #fff;
+    text-align: left;
+}
+
+.settings-nav-btn:hover {
+    background: #252525;
+    transform: translateX(5px);
+}
+
+.settings-nav-btn .icon {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.settings-nav-btn span {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.arrows {
     color: #666;
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
+}
+
+/* Invoice Table in specific view */
+.invoices-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #1a1a1d;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.invoices-table th,
+.invoices-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #333;
+}
+
+.invoices-table th {
+    background: #222;
+    color: #aaa;
+    font-weight: 600;
+}
+
+.info-box-small {
+    background: #222;
+    color: #ccc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #333;
+}
+
+.btn-back-settings {
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.btn-back-settings:hover {
+    color: #fff;
+    text-decoration: underline;
 }
 
 @media (max-width: 600px) {
@@ -447,5 +636,11 @@
     .book-card {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .setting-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
     }
 }

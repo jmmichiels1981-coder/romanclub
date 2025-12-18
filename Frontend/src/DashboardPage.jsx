@@ -5,7 +5,7 @@ import WelcomeModal from './WelcomeModal';
 import './dashboard.css';
 
 // =========================================
-// SUB-COMPONENTS (Moved outside to prevent re-renders)
+// SUB-COMPONENTS (Views)
 // =========================================
 
 const LibraryView = () => (
@@ -35,20 +35,87 @@ const ReadingPathView = () => (
     </div>
 );
 
+// --- Settings Sub-Views ---
+
+const SettingsInvoicesView = ({ invoices, onBack }) => (
+    <div className="dashboard-detail-view fade-in">
+        <button className="btn-back-settings" onClick={onBack}>← Retour aux paramètres</button>
+        <h2 className="view-title">Mes factures</h2>
+        <div className="invoices-list">
+            {invoices.length === 0 ? (
+                <div className="info-box-small">
+                    ℹ️ Aucune facture n'est disponible pendant la période de gratuité (avant le 01/07/2026).
+                </div>
+            ) : (
+                <table className="invoices-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Montant</th>
+                            <th>Statut</th>
+                            <th>PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {invoices.map(inv => (
+                            <tr key={inv.id}>
+                                <td>{new Date(inv.date * 1000).toLocaleDateString()}</td>
+                                <td>{(inv.amount / 100).toFixed(2)} {inv.currency.toUpperCase()}</td>
+                                <td>{inv.status}</td>
+                                <td>
+                                    <a href={inv.pdf} target="_blank" rel="noopener noreferrer" style={{ color: '#2196f3' }}>
+                                        Télécharger
+                                    </a>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
+        </div>
+    </div>
+);
+
+const SettingsBooksView = ({ booksCount, onBack }) => (
+    <div className="dashboard-detail-view fade-in">
+        <button className="btn-back-settings" onClick={onBack}>← Retour aux paramètres</button>
+        <h2 className="view-title">Mon compte RomanClub</h2>
+        <div className="stat-highlight">
+            <p>Vous avez accès à <strong>{booksCount}</strong> romans dans votre bibliothèque numérique.</p>
+        </div>
+    </div>
+);
+
+
 const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe, elements, fetchUserData }) => {
-    // Local state for editing
+    // Local state
+    const [viewMode, setViewMode] = useState('main'); // 'main', 'invoices', 'books'
+
+    // Email Edit State
     const [editingEmail, setEditingEmail] = useState(false);
     const [newEmail, setNewEmail] = useState(userProfile.email || "");
+    const [emailStatus, setEmailStatus] = useState("");
+
+    // Payment Edit State
     const [editingPayment, setEditingPayment] = useState(false);
     const [paymentLoading, setPaymentLoading] = useState(false);
-    const [statusMessage, setStatusMessage] = useState("");
+    const [paymentStatus, setPaymentStatus] = useState("");
     const [newPaymentType, setNewPaymentType] = useState('card'); // 'card' | 'sepa'
+
+    // Data State
     const [invoices, setInvoices] = useState([]);
     const [booksCount, setBooksCount] = useState(0);
 
-    // Fetch invoices and books count on mount of Settings
+    useEffect(() => {
+        if (viewMode === 'invoices' || viewMode === 'main') { // Optimize: fetch if likely to be needed or on mount
+            // Actually, fetch on mount of SettingsView to have data ready for the counter or pre-load
+            // Or separate logic. Let's fetch once on mount.
+        }
+    }, [viewMode]);
+
     useEffect(() => {
         const fetchSettingsData = async () => {
+            if (!authToken) return;
             try {
                 // Invoices
                 const resInv = await fetch(`${API_URL}/billing/invoices`, {
@@ -68,14 +135,17 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                 console.error("Fetch settings data error:", error);
             }
         };
-
-        if (authToken) {
-            fetchSettingsData();
-        }
+        fetchSettingsData();
     }, [authToken, API_URL]);
 
-    const handleUpdateEmail = async () => {
+
+    // --- Handlers ---
+
+    const handleUpdateEmail = async (e) => {
+        e.preventDefault();
         if (!newEmail) return;
+        setEmailStatus("Mise à jour...");
+
         try {
             const res = await fetch(`${API_URL}/me/email`, {
                 method: 'PUT',
@@ -89,19 +159,26 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
             if (res.ok) {
                 setUserProfile(prev => ({ ...prev, email: newEmail }));
                 setEditingEmail(false);
-                setStatusMessage("Email mis à jour avec succès.");
+                setEmailStatus("Email mis à jour avec succès.");
+                setTimeout(() => setEmailStatus(""), 3000);
             } else {
-                setStatusMessage("Erreur: " + (data.error || "Update failed"));
+                setEmailStatus("Erreur: " + (data.error || "Échec"));
             }
         } catch (error) {
-            setStatusMessage("Erreur de connexion.");
+            setEmailStatus("Erreur de connexion.");
         }
+    };
+
+    const handleCancelEmail = () => {
+        setEditingEmail(false);
+        setNewEmail(userProfile.email || "");
+        setEmailStatus("");
     };
 
     const handleUpdatePaymentMethod = async (e) => {
         e.preventDefault();
         setPaymentLoading(true);
-        setStatusMessage("");
+        setPaymentStatus("");
 
         if (!stripe || !elements) return;
 
@@ -156,17 +233,16 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
             });
 
             if (resUpdate.ok) {
-                setStatusMessage("Moyen de paiement mis à jour.");
+                setPaymentStatus("Moyen de paiement mis à jour.");
                 setEditingPayment(false);
-                // Refresh profile to update displayed PM type/ID
-                fetchUserData();
+                fetchUserData(); // Refresh profile
             } else {
                 throw new Error("Erreur sauvegarde backend.");
             }
 
         } catch (error) {
             console.error(error);
-            setStatusMessage("Erreur: " + error.message);
+            setPaymentStatus("Erreur: " + error.message);
         } finally {
             setPaymentLoading(false);
         }
@@ -177,11 +253,15 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
         invalid: { color: '#fa755a' }
     };
 
+    // --- Render Logic ---
+
+    if (viewMode === 'invoices') return <SettingsInvoicesView invoices={invoices} onBack={() => setViewMode('main')} />;
+    if (viewMode === 'books') return <SettingsBooksView booksCount={booksCount} onBack={() => setViewMode('main')} />;
+
+    // Main Settings View
     return (
         <div className="dashboard-detail-view fade-in">
             <h2 className="view-title" style={{ color: '#2196f3' }}>Paramètres</h2>
-
-            {statusMessage && <div className="status-message" style={{ marginBottom: '1rem', color: '#4caf50' }}>{statusMessage}</div>}
 
             {/* 1. Account Data */}
             <section className="settings-section">
@@ -190,26 +270,32 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                     <div className="setting-row"><span className="label">Nom :</span> {userProfile.nom}</div>
                     <div className="setting-row"><span className="label">Prénom :</span> {userProfile.prenom}</div>
 
-                    <div className="setting-row">
+                    <div className="setting-row email-row">
                         <span className="label">Email :</span>
                         {editingEmail ? (
-                            <div className="inline-edit">
+                            <form className="email-edit-form" onSubmit={handleUpdateEmail}>
                                 <input
                                     type="email"
                                     value={newEmail}
                                     onChange={e => setNewEmail(e.target.value)}
                                     className="edit-input"
+                                    required
                                 />
-                                <button onClick={handleUpdateEmail} className="btn-small-confirm">OK</button>
-                                <button onClick={() => setEditingEmail(false)} className="btn-small-cancel">X</button>
-                            </div>
+                                <div className="edit-actions">
+                                    <button type="submit" className="btn-small-confirm">Enregistrer</button>
+                                    <button type="button" onClick={handleCancelEmail} className="btn-small-cancel">Annuler</button>
+                                </div>
+                            </form>
                         ) : (
-                            <>
+                            <div className="email-display">
                                 <span>{userProfile.email}</span>
-                                <button onClick={() => setEditingEmail(true)} className="btn-text-action">Modifier</button>
-                            </>
+                                <button onClick={() => { setEditingEmail(true); setNewEmail(userProfile.email); }} className="btn-text-action">
+                                    Modifier
+                                </button>
+                            </div>
                         )}
                     </div>
+                    {emailStatus && <div className="status-message-small">{emailStatus}</div>}
 
                     <div className="setting-row"><span className="label">Inscrit le :</span> {userProfile.dateInscription ? new Date(userProfile.dateInscription).toLocaleDateString() : '-'}</div>
                     <div className="setting-row">
@@ -254,7 +340,7 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
 
                             <div className="payment-element-container" style={{ background: '#333', padding: '10px', borderRadius: '4px', marginBottom: '10px' }}>
                                 {newPaymentType === 'card' ? (
-                                    <CardNumberElement options={{ style: elementStyle }} />
+                                    <CardNumberElement options={{ style: elementStyle, showIcon: true }} />
                                 ) : (
                                     <IbanElement options={{ supportedCountries: ['SEPA'], style: elementStyle }} />
                                 )}
@@ -278,52 +364,26 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                             </div>
                         </form>
                     )}
+                    {paymentStatus && <div className="status-message-small">{paymentStatus}</div>}
                 </div>
             </section>
 
-            {/* 3. Invoices */}
+            {/* 3. Navigation Links (Invoices / Books) */}
             <section className="settings-section">
-                <h3>Mes factures</h3>
-                <div className="invoices-list">
-                    {invoices.length === 0 ? (
-                        <div className="info-box-small">
-                            ℹ️ Aucune facture disponible pendant la période de gratuité (avant le 01/07/2026).
-                        </div>
-                    ) : (
-                        <table className="invoices-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Montant</th>
-                                    <th>Statut</th>
-                                    <th>PDF</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {invoices.map(inv => (
-                                    <tr key={inv.id}>
-                                        <td>{new Date(inv.date * 1000).toLocaleDateString()}</td>
-                                        <td>{(inv.amount / 100).toFixed(2)} {inv.currency.toUpperCase()}</td>
-                                        <td>{inv.status}</td>
-                                        <td>
-                                            <a href={inv.pdf} target="_blank" rel="noopener noreferrer" style={{ color: '#2196f3' }}>
-                                                Télécharger
-                                            </a>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
-            </section>
+                <h3>Informations & Facturation</h3>
+                <div className="settings-nav-buttons">
+                    <button className="settings-nav-btn" onClick={() => setViewMode('invoices')}>
+                        <span className="icon">📄</span>
+                        <span>Mes factures</span>
+                        <span className="arrow">→</span>
+                    </button>
 
-            {/* 4. Global Info */}
-            <section className="settings-section">
-                <h3>Mon compte RomanClub</h3>
-                <p>
-                    <strong>{booksCount}</strong> romans disponibles dans votre bibliothèque numérique.
-                </p>
+                    <button className="settings-nav-btn" onClick={() => setViewMode('books')}>
+                        <span className="icon">📚</span>
+                        <span>Mes livres</span>
+                        <span className="arrow">→</span>
+                    </button>
+                </div>
             </section>
 
             <div className="settings-actions" style={{ marginTop: '2rem', borderTop: '1px solid #333', paddingTop: '1rem' }}>
@@ -357,7 +417,7 @@ const DashboardPage = () => {
         }
         fetchUserData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [authToken]); // Only depend on authToken
+    }, [authToken]);
 
     const fetchUserData = async () => {
         try {
@@ -432,6 +492,10 @@ const DashboardPage = () => {
                     </div>
                 ) : (
                     <div className="detail-view-container">
+                        {/* Back button logic is slightly different for Settings main view vs subviews? 
+                            The settings sub-views have their own back buttons. 
+                            The MAIN settings view needs a back button to dashboard. */}
+
                         <button className="btn-back" onClick={() => setView('dashboard')}>
                             ← Retour au tableau de bord
                         </button>
