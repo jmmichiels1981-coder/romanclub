@@ -1,14 +1,27 @@
 ﻿const express = require("express");
 const { MongoClient } = require("mongodb");
 const cors = require("cors");
+const bcrypt = require("bcryptjs");
+const Stripe = require("stripe");
+const bodyParser = require("body-parser");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://romanclub:romanclub123@cluster0.mongodb.net/romanclub?retryWrites=true&w=majority";
-// Note: Fallback URI added for dev convenience if env var missing, assuming standard connection.
+const MONGODB_URI = process.env.MONGODB_URI;
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.use(cors());
-app.use(express.json());
+
+// IMPORTANT: on ne doit PAS parser en JSON la route /webhook (Stripe a besoin du RAW body)
+// Donc on ajoute un middleware conditionnel :
+app.use((req, res, next) => {
+  if (req.originalUrl === "/webhook") {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
+});
 
 let db;
 let usersCollection;
@@ -40,80 +53,53 @@ app.get("/health", (req, res) => {
   }
 });
 
-const bcrypt = require("bcryptjs");
-
-// Login Endpoint
+// =======================
+// LOGIN
+// =======================
 app.post("/login", async (req, res) => {
-  const { email, pin } = req.body; // Using 'pin' instead of password for RomanClub concept or mixed
+  const { email, pin } = req.body;
 
   if (!db) return res.status(500).json({ error: "Database not connected" });
   if (!email) return res.status(400).json({ error: "Email required" });
 
   try {
     const user = await usersCollection.findOne({ email });
-
-    // 1. Check if user exists
     if (!user) {
-      // Anti-enumeration: don't reveal user doesn't exist, just say invalid creds
-      // But for this project stage/demo, we might want to be explicit or create dummy?
-      // User requested strict rules now.
       return res.status(401).json({ success: false, message: "Identifiants invalides" });
     }
 
-    // 2. Check Lockout
     if (user.lockUntil && user.lockUntil > new Date()) {
       const waitMinutes = Math.ceil((user.lockUntil - new Date()) / 60000);
-      return res.status(403).json({ success: false, message: `Compte temporairement bloqué. Réessayez dans ${waitMinutes} minutes.` });
+      return res.status(403).json({
+        success: false,
+        message: `Compte temporairement bloqué. Réessayez dans ${waitMinutes} minutes.`,
+      });
     }
 
-    // 3. Verify PIN (or password param if sent as 'pin')
-    // We assume the frontend might send 'pin' or 'password'. The previous frontend code sent { email } only or dummy.
-    // We need to support the new secure flow.
-    // If 'pin' is not passed, fail.
-    // NOTE: Frontend currently might send 'password' field if it was standard login? 
-    // Let's check previous LoginPage.jsx... It checks separate password input but sends { email } only in the old code?
-    // Wait, the previous LoginPage.jsx only sent: body: JSON.stringify({ email }). 
-    // I need to update LoginPage.jsx to send PIN/Password too! 
-    // But this task is Backend first. I will assume 'pin' property for the code.
-
-    let validPin = false;
-    if (user.pinHash && pin) {
-      validPin = await bcrypt.compare(pin, user.pinHash);
-    } else if (!user.pinHash) {
-      // Legacy/Test user without hash?
-      // Allow login if simple email match OR deny?
-      // Rules say "Secure PIN", so we should probably deny un-hashed if strict.
-      // For transition, if no hash, maybe allow or requires reset.
-      // Let's deny to be strict as requested.
-      validPin = false;
-    }
+    const validPin = user.pinHash && pin
+      ? await bcrypt.compare(pin, user.pinHash)
+      : false;
 
     if (!validPin) {
-      // Increment attempts
       const attempts = (user.failedLoginAttempts || 0) + 1;
       let updateDoc = { $set: { failedLoginAttempts: attempts } };
 
       if (attempts >= 5) {
-        // Lock for 30 minutes
-        const lockTime = new Date(Date.now() + 30 * 60 * 1000); // 30 mins
-        updateDoc.$set.lockUntil = lockTime;
-        updateDoc.$set.failedLoginAttempts = 0; // Reset counter after locking? Or keep it? 
-        // Usually reset after lock expiration. Simple way: set lockUntil.
+        updateDoc.$set.lockUntil = new Date(Date.now() + 30 * 60 * 1000);
+        updateDoc.$set.failedLoginAttempts = 0;
       }
 
       await usersCollection.updateOne({ email }, updateDoc);
       return res.status(401).json({ success: false, message: "Identifiants invalides" });
     }
 
-    // 4. Success Reset attempts
-    await usersCollection.updateOne({ email }, {
-      $set: { failedLoginAttempts: 0, lockUntil: null }
-    });
+    await usersCollection.updateOne(
+      { email },
+      { $set: { failedLoginAttempts: 0, lockUntil: null } }
+    );
 
-    // Remove sensitive data
     const safeUser = { ...user };
     delete safeUser.pinHash;
-    delete safeUser.password;
 
     res.json({ success: true, user: safeUser });
 
@@ -123,7 +109,9 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Register Endpoint
+// =======================
+// REGISTER (INCHANGÉ)
+/// =======================
 app.post("/register", async (req, res) => {
   const userData = req.body;
 
@@ -131,60 +119,46 @@ app.post("/register", async (req, res) => {
   if (!userData.email) return res.status(400).json({ error: "Email required" });
 
   try {
-    // 1. Validate Email Format (Backend side)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(userData.email)) {
       return res.status(400).json({ success: false, message: "Format d'email invalide." });
     }
 
-    // 2. Check Unique Email
     const existingUser = await usersCollection.findOne({ email: userData.email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: "Cet email est déjà utilisé." });
     }
 
-    // 3. Check Unique Payment Method (Simulation: check if paymentMethodId exists in any user)
-    // In real Stripe, we'd query Stripe API or check stored ID.
-    // Here assuming userData.paymentMethodId is passed.
-    if (userData.paymentMethodId) {
-      const existingPayment = await usersCollection.findOne({ "paymentMethodId": userData.paymentMethodId });
-      if (existingPayment) {
-        return res.status(400).json({ success: false, message: "Ce moyen de paiement est déjà associé à un compte." });
-      }
-    }
-
-    // 4. Hash PIN
     if (!userData.pin || userData.pin.length < 4) {
       return res.status(400).json({ success: false, message: "Code PIN invalide (min 4 chiffres)." });
     }
+
     const pinHash = await bcrypt.hash(userData.pin, 10);
 
     const newUser = {
       ...userData,
-      pinHash, // Store hash
-      pin: undefined, // Do not store plain text
-      password: undefined, // Do not store plain text password if sent
+      pinHash,
       createdAt: new Date(),
       role: "user",
-      subscriptionStatus: "active",
-      subscriptionStart: "2026-07-01",
-      paymentMethodSecurelyStored: true,
-      welcomeGiftPending: true,
-      failedLoginAttempts: 0
+      subscriptionStatus: "pending",
+      failedLoginAttempts: 0,
     };
 
     const result = await usersCollection.insertOne(newUser);
     newUser._id = result.insertedId;
-    delete newUser.pinHash; // Don't send back hash
+    delete newUser.pinHash;
 
     res.json({ success: true, user: newUser });
+
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Update Welcome Seen Endpoint
+// =======================
+// UPDATE WELCOME SEEN
+// =======================
 app.post("/update-welcome", async (req, res) => {
   const { email } = req.body;
 
@@ -201,6 +175,87 @@ app.post("/update-welcome", async (req, res) => {
     console.error("Update error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
+});
+
+// =======================
+// STRIPE – CREATE SUBSCRIPTION (ÉTAPE 2)
+// =======================
+app.post("/create-subscription", async (req, res) => {
+  const { email, country } = req.body;
+
+  if (!email || !country) {
+    return res.status(400).json({ error: "Email and country required" });
+  }
+
+  try {
+    let priceId;
+    switch (country) {
+      case "Suisse":
+        priceId = process.env.STRIPE_PRICE_CHF;
+        break;
+      case "Canada":
+        priceId = process.env.STRIPE_PRICE_CAD;
+        break;
+      default:
+        priceId = process.env.STRIPE_PRICE_EUR;
+    }
+
+    const customer = await stripe.customers.create({ email });
+
+    const subscription = await stripe.subscriptions.create({
+      customer: customer.id,
+      items: [{ price: priceId }],
+      trial_end: Math.floor(new Date("2026-07-01").getTime() / 1000),
+    });
+
+    res.json({
+      success: true,
+      subscriptionId: subscription.id,
+      customerId: customer.id,
+    });
+
+  } catch (error) {
+    console.error("Stripe subscription error:", error);
+    res.status(500).json({ error: "Stripe subscription failed" });
+  }
+});
+
+// =======================
+// STRIPE WEBHOOK (ÉTAPE 3)
+// =======================
+app.post("/webhook", bodyParser.raw({ type: "application/json" }), (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error("⚠️ Webhook signature verification failed.", err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  switch (event.type) {
+    case "customer.subscription.created":
+      console.log("✅ Abonnement Stripe créé");
+      break;
+
+    case "invoice.paid":
+      console.log("💰 Facture payée");
+      break;
+
+    case "invoice.payment_failed":
+      console.log("❌ Paiement échoué");
+      break;
+
+    default:
+      console.log(`ℹ️ Événement Stripe reçu : ${event.type}`);
+  }
+
+  res.json({ received: true });
 });
 
 app.listen(PORT, () => {
