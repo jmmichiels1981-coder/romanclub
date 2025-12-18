@@ -47,6 +47,7 @@
     color: #e0e0e0;
     font-family: var(--font-family);
     line-height: 1.6;
+    text-align: left;
 }
 
 /* Custom Scrollbar */

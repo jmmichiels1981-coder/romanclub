@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./login.css";
 
@@ -9,6 +9,15 @@ function LoginPage() {
 
     const [password, setPassword] = useState("");
     const [pin, setPin] = useState("");
+
+    // Load saved email on mount
+    // Load saved email on mount
+    useEffect(() => {
+        const savedEmail = localStorage.getItem("savedEmail");
+        if (savedEmail) {
+            setEmail(savedEmail);
+        }
+    }, []);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -26,6 +35,7 @@ function LoginPage() {
                 // Store user info (including welcomeSeen status)
                 localStorage.setItem("user", JSON.stringify(data.user));
                 localStorage.setItem("userLoggedIn", "true"); // Keep for legacy/simple check if needed
+                localStorage.setItem("savedEmail", email); // Persist email for future logins
                 navigate("/dashboard");
             } else {
                 alert("Erreur de connexion : " + (data.message || "Identifiants incorrects"));
