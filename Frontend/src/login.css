@@ -225,3 +225,102 @@ select.login-input {
     border-color: #555;
     color: #ccc;
 }
+
+/* Payment Page Specifics */
+.info-box {
+    background-color: rgba(0, 255, 128, 0.1);
+    border: 1px solid rgba(0, 255, 128, 0.3);
+    color: #aaffcc;
+    padding: 1rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.payment-label {
+    display: block;
+    color: #ccc;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    text-align: left;
+}
+
+.payment-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.payment-tab {
+    flex: 1;
+    cursor: pointer;
+    background-color: transparent;
+    border: 1px solid #333;
+    padding: 1rem;
+    color: #888;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: all 0.2s;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.payment-tab.active {
+    background-color: #ff7700;
+    color: white;
+    border-color: #ff7700;
+    box-shadow: 0 4px 15px rgba(255, 85, 0, 0.3);
+}
+
+.mandate-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    margin-top: 1.5rem;
+    text-align: left;
+}
+
+.mandate-checkbox {
+    margin-top: 0.2rem;
+    accent-color: #ff7700;
+    width: 1.2rem;
+    height: 1.2rem;
+    cursor: pointer;
+}
+
+.mandate-text {
+    font-size: 0.8rem;
+    color: #ccc;
+    line-height: 1.4;
+}
+
+.btns-row {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    border: 1px solid #333;
+    color: #ccc;
+    padding: 1rem;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    flex: 1;
+    text-transform: uppercase;
+    font-family: inherit;
+}
+
+.btn-secondary:hover {
+    border-color: #666;
+    color: white;
+}

@@ -122,26 +122,110 @@ function RegisterPage() {
         );
     }
 
+    const [paymentMethod, setPaymentMethod] = useState("card"); // "card" or "sepa"
+
+    // Helper to get country code for IBAN label
+    const getIbanLabel = () => {
+        const map = {
+            "France": "FR",
+            "Belgique": "BE",
+            "Luxembourg": "LU",
+            "Suisse": "CH",
+            "Canada": "CA",
+            "Monaco": "MC"
+        };
+        return map[formData.pays] || "FR";
+    };
+
     if (step === 2) {
         return (
             <div className="login-container">
                 <div className="login-header">
-                    <h1 className="brand-title">PAIEMENT</h1>
-                    <p className="page-subtitle">ÉTAPE 2/2</p>
+                    <img src="/logo.png" alt="Roman Club Logo" className="login-logo" />
+                    <h1 className="brand-title">ROMAN CLUB</h1>
+                    <p className="page-subtitle">INSCRIPTION - PAIEMENT</p>
                 </div>
-                <div className="login-card" style={{ textAlign: 'center' }}>
-                    <p style={{ color: '#fff', marginBottom: '2rem' }}>
-                        Simulation de l'étape de paiement sécurisé.
-                    </p>
-                    <button className="login-btn" onClick={handlePaymentSuccess}>
-                        SIMULER VALIDATION PAIEMENT
-                    </button>
-                    <button
-                        style={{ marginTop: '1rem', background: 'transparent', border: 'none', color: '#888', cursor: 'pointer' }}
-                        onClick={() => setStep(1)}
-                    >
-                        Retour
-                    </button>
+
+                <div className="login-card" style={{ maxWidth: '500px' }}>
+
+                    <div className="info-box">
+                        L’utilisation de l’application est entièrement gratuite jusqu’au 30 juin 2026.<br />
+                        Aucun prélèvement ne sera effectué avant le 1er juillet 2026.<br />
+                        Votre inscription vous permet simplement d’activer votre accès dès maintenant, sans aucun frais immédiat.<br />
+                        Vous serez bien entendu averti avant tout renouvellement ou prélèvement.
+                    </div>
+
+                    <div className="input-group">
+                        <label className="payment-label">Mode de paiement</label>
+                        <div className="payment-tabs">
+                            <div
+                                className={`payment-tab ${paymentMethod === 'card' ? 'active' : ''}`}
+                                onClick={() => setPaymentMethod('card')}
+                            >
+                                Carte bancaire<br />(Visa/Mastercard)
+                            </div>
+                            <div
+                                className={`payment-tab ${paymentMethod === 'sepa' ? 'active' : ''}`}
+                                onClick={() => setPaymentMethod('sepa')}
+                            >
+                                Prélèvement SEPA
+                            </div>
+                        </div>
+                    </div>
+
+                    {paymentMethod === 'card' && (
+                        <>
+                            <div className="input-group">
+                                <label className="input-label">Informations de carte bancaire</label>
+                                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                    <input type="text" placeholder="Numéro de carte" className="login-input" style={{ flex: 2 }} />
+                                    <input type="text" placeholder="MM/AA" className="login-input" style={{ flex: 1 }} />
+                                    <input type="text" placeholder="CVC" className="login-input" style={{ flex: 1 }} />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                                <div className="input-group" style={{ flex: 1 }}>
+                                    <label className="input-label">Nom</label>
+                                    <input type="text" readOnly value={formData.nom} className="login-input" style={{ color: '#888' }} />
+                                </div>
+                                <div className="input-group" style={{ flex: 1 }}>
+                                    <label className="input-label">Prénom</label>
+                                    <input type="text" readOnly value={formData.prenom} className="login-input" style={{ color: '#888' }} />
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {paymentMethod === 'sepa' && (
+                        <>
+                            <div className="input-group">
+                                <label className="input-label">IBAN ({getIbanLabel()})</label>
+                                <input type="text" placeholder={`${getIbanLabel()}XX XXXX XXXX XXXX XXXX XXXX XXX`} className="login-input" />
+                            </div>
+
+                            <div className="mandate-row">
+                                <input type="checkbox" className="mandate-checkbox" id="mandate" />
+                                <label htmlFor="mandate" className="mandate-text">
+                                    En cochant cette case, j’autorise RomanClub à prélever le montant de mon abonnement via prélèvement SEPA.<br />
+                                    Aucun prélèvement ne sera effectué avant le 1er juillet 2026.<br />
+                                    Je peux annuler ce mandat ou demander un remboursement selon les conditions de ma banque.
+                                </label>
+                            </div>
+                        </>
+                    )}
+
+                    <div className="btns-row">
+                        <button
+                            className="btn-secondary"
+                            onClick={() => setStep(1)}
+                        >
+                            Retour
+                        </button>
+                        <button className="login-btn" style={{ marginTop: 0, flex: 2 }} onClick={handlePaymentSuccess}>
+                            CRÉER MON COMPTE
+                        </button>
+                    </div>
                 </div>
             </div>
         );
