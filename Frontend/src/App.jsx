@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import "./index.css";
 import Reader from "./Reader";
 import Roman from "./Roman";
+import LoginPage from "./LoginPage";
 
 /* ======================
    HOME PAGE
@@ -84,7 +85,7 @@ function App() {
 
         {/* Pages annexes */}
         <Route path="/inscription" element={<PlaceholderPage title="Inscription" />} />
-        <Route path="/connexion" element={<PlaceholderPage title="Connexion" />} />
+        <Route path="/connexion" element={<LoginPage />} />
         <Route path="/admin" element={<PlaceholderPage title="Admin" />} />
         <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
         <Route path="/mentions" element={<PlaceholderPage title="Mentions légales" />} />
