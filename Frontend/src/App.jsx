@@ -73,9 +73,12 @@ function PlaceholderPage({ title }) {
    APP
    ====================== */
 
+import WelcomeModal from "./WelcomeModal";
+
 function App() {
   return (
     <Router>
+      <WelcomeModal />
       <Routes>
         <Route path="/" element={<HomePage />} />
 

@@ -1,7 +1,17 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./login.css";
 
 function LoginPage() {
+    const navigate = useNavigate();
+
+    const handleLogin = (e) => {
+        e.preventDefault();
+        // Simulate successful login
+        localStorage.setItem("userLoggedIn", "true");
+        // Redirect to homepage (or dashboard) where the Welcome Modal will trigger
+        navigate("/");
+    };
+
     return (
         <div className="login-container">
             <div className="login-header">
@@ -11,37 +21,42 @@ function LoginPage() {
             </div>
 
             <div className="login-card">
-                <div className="input-group">
-                    <label className="input-label">Email</label>
-                    <input
-                        type="email"
-                        placeholder="votre@email.fr"
-                        className="login-input"
-                    />
-                </div>
+                <form onSubmit={handleLogin} style={{ width: '100%' }}>
+                    <div className="input-group">
+                        <label className="input-label">Email</label>
+                        <input
+                            type="email"
+                            placeholder="votre@email.fr"
+                            className="login-input"
+                            required
+                        />
+                    </div>
 
-                <div className="input-group">
-                    <label className="input-label">Mot de passe</label>
-                    <input
-                        type="password"
-                        placeholder="......."
-                        className="login-input"
-                    />
-                </div>
+                    <div className="input-group" style={{ marginTop: '1rem' }}>
+                        <label className="input-label">Mot de passe</label>
+                        <input
+                            type="password"
+                            placeholder="......."
+                            className="login-input"
+                            required
+                        />
+                    </div>
 
-                <div className="input-group">
-                    <label className="input-label">Code PIN [4 chiffres]</label>
-                    <input
-                        type="password" /* Or text/tel with maxlength since it's PIN */
-                        placeholder="...."
-                        maxLength={4}
-                        className="login-input"
-                    />
-                </div>
+                    <div className="input-group" style={{ marginTop: '1rem' }}>
+                        <label className="input-label">Code PIN [4 chiffres]</label>
+                        <input
+                            type="text"
+                            placeholder="...."
+                            maxLength={4}
+                            className="login-input"
+                            required
+                        />
+                    </div>
 
-                <button type="submit" className="login-btn">
-                    SE CONNECTER
-                </button>
+                    <button type="submit" className="login-btn">
+                        SE CONNECTER
+                    </button>
+                </form>
 
                 <div className="helper-links">
                     <div>
