@@ -102,6 +102,9 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
     const [paymentStatus, setPaymentStatus] = useState("");
     const [newPaymentType, setNewPaymentType] = useState('card'); // 'card' | 'sepa'
 
+    // Cancellation State
+    const [cancelling, setCancelling] = useState(false);
+
     // Data State
     const [invoices, setInvoices] = useState([]);
     const [booksCount, setBooksCount] = useState(0);
@@ -248,6 +251,32 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
         }
     };
 
+    const handleCancelSubscription = async () => {
+        if (!window.confirm("Êtes-vous sûr de vouloir résilier votre abonnement ? La résiliation prendra effet à la fin de la période en cours.")) {
+            return;
+        }
+
+        setCancelling(true);
+        try {
+            const res = await fetch(`${API_URL}/billing/cancel-subscription`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert("Votre abonnement a été résilié. Il prendra fin à l'échéance prévue.");
+                fetchUserData(); // Refresh status
+            } else {
+                alert("Erreur lors de la résiliation : " + (data.error || "Erreur inconnue"));
+            }
+        } catch (error) {
+            console.error("Cancellation error", error);
+            alert("Erreur de connexion.");
+        } finally {
+            setCancelling(false);
+        }
+    };
+
     const elementStyle = {
         base: { fontSize: '16px', color: '#fff', '::placeholder': { color: '#aab7c4' } },
         invalid: { color: '#fa755a' }
@@ -301,7 +330,7 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                     <div className="setting-row">
                         <span className="label">Statut :</span>
                         <span className={`status-pill ${userProfile.subscriptionStatus === 'active' ? 'done' : 'ongoing'}`}>
-                            {userProfile.subscriptionStatus === 'active' ? 'Abonné actif' : 'Inactif'}
+                            {userProfile.subscriptionStatus === 'active' ? 'Abonné actif' : (userProfile.subscriptionStatus === 'cancel_at_period_end' ? 'Résiliation programmée' : 'Inactif')}
                         </span>
                     </div>
                 </div>
@@ -340,7 +369,7 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
 
                             <div className="payment-element-container" style={{ background: '#333', padding: '10px', borderRadius: '4px', marginBottom: '10px' }}>
                                 {newPaymentType === 'card' ? (
-                                    <CardNumberElement options={{ style: elementStyle, showIcon: true }} />
+                                    <CardNumberElement options={{ style: elementStyle, showIcon: true, disableLink: true }} />
                                 ) : (
                                     <IbanElement options={{ supportedCountries: ['SEPA'], style: elementStyle }} />
                                 )}
@@ -387,7 +416,13 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
             </section>
 
             <div className="settings-actions" style={{ marginTop: '2rem', borderTop: '1px solid #333', paddingTop: '1rem' }}>
-                <p className="hint-text">Pour résilier votre abonnement, veuillez contacter le support.</p>
+                {userProfile.subscriptionStatus !== 'cancel_at_period_end' ? (
+                    <button className="btn-text-cancel" onClick={handleCancelSubscription} disabled={cancelling}>
+                        {cancelling ? "Traitement..." : "Résilier l'abonnement"}
+                    </button>
+                ) : (
+                    <p className="hint-text">Votre abonnement prendra fin à la date prévue.</p>
+                )}
             </div>
         </div>
     );
@@ -408,6 +443,7 @@ const DashboardPage = () => {
 
     // User Data State
     const [userProfile, setUserProfile] = useState({});
+    const [loading, setLoading] = useState(true); // Add global loading state
 
     // Initial Data Load
     useEffect(() => {
@@ -420,6 +456,7 @@ const DashboardPage = () => {
     }, [authToken]);
 
     const fetchUserData = async () => {
+        setLoading(true);
         try {
             const resMe = await fetch(`${API_URL}/me`, {
                 headers: { 'Authorization': `Bearer ${authToken}` }
@@ -435,6 +472,8 @@ const DashboardPage = () => {
 
         } catch (error) {
             console.error("Error fetching data:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -444,6 +483,15 @@ const DashboardPage = () => {
         localStorage.removeItem("authToken");
         navigate("/");
     };
+
+    if (loading) {
+        return (
+            <div className="dashboard-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#fff' }}>
+                <div className="spinner" style={{ border: '4px solid rgba(255,255,255,0.1)', width: '36px', height: '36px', borderRadius: '50%', borderLeftColor: '#ff7700', animation: 'spin 1s linear infinite' }}></div>
+                <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">

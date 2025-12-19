@@ -302,6 +302,39 @@ app.get("/books/count", requireAuth, async (req, res) => {
   }
 });
 
+// 7. CANCEL SUBSCRIPTION
+app.post("/billing/cancel-subscription", requireAuth, async (req, res) => {
+  try {
+    const user = await usersCollection.findOne({ _id: new ObjectId(req.user.userId) });
+    if (!user || !user.stripeSubscriptionId) {
+      return res.status(400).json({ error: "No active subscription found" });
+    }
+
+    // Update Stripe Subscription to cancel at period end
+    const subscription = await stripe.subscriptions.update(
+      user.stripeSubscriptionId,
+      { cancel_at_period_end: true }
+    );
+
+    // Update MongoDB
+    await usersCollection.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          subscriptionStatus: "cancel_at_period_end",
+          cancellationRequestedAt: new Date()
+        }
+      }
+    );
+
+    res.json({ success: true, message: "Subscription cancelled at period end", subscription });
+
+  } catch (error) {
+    console.error("Cancel subscription error:", error);
+    res.status(500).json({ error: "Cancellation failed" });
+  }
+});
+
 
 // =======================
 // STATIC FILES & SPA FALLBACK
