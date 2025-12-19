@@ -204,6 +204,7 @@
     margin-bottom: 1.5rem;
     padding: 0;
     transition: color 0.2s;
+    text-decoration: none;
 }
 
 .btn-back:hover {
@@ -372,28 +373,39 @@
 .reading-item .book-title {
     font-weight: bold;
     color: #fff;
+    display: block;
 }
 
 .reading-item .time-spent {
     color: #aaa;
     font-family: monospace;
+    font-weight: 500;
+    font-size: 1rem;
 }
 
-.status-pill {
-    padding: 0.2rem 0.6rem;
-    border-radius: 12px;
+.book-info-minimal {
+    display: flex;
+    flex-direction: column;
+}
+
+.book-meta-sub {
+    margin-top: 0.2rem;
+}
+
+/* Discreet Status Text */
+.status-text-simple {
     font-size: 0.75rem;
-    margin-right: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666;
 }
 
-.status-pill.done {
-    background: #155724;
-    color: #d4edda;
+.status-text-simple.done {
+    color: #4caf50;
 }
 
-.status-pill.ongoing {
-    background: #fff3cd;
-    color: #856404;
+.status-text-simple.ongoing {
+    color: #ffca28;
 }
 
 /* Path Distribution */
