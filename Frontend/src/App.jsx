@@ -151,7 +151,7 @@ function App() {
 
           {/* Routes structurelles */}
           <Route path="/roman" element={<Roman />} />
-          <Route path="/lecture" element={<Reader />} />
+          <Route path="/lecture/:bookId" element={<Reader />} />
 
           {/* Pages annexes */}
           <Route path="/dashboard" element={<DashboardPage />} />

@@ -72,74 +72,81 @@ const TUTORIAL_CONTENT = {
     }
 };
 
-// =========================================
-// MOCK DATA Constants
-// =========================================
-
-const MOCK_NEW_BOOKS = [
-    { id: 1, title: "L'Ombre du Silence", author: "Marc Levy", genre: "Polar", summary: "Une enquête palpitante au cœur des secrets d'État.", datePublication: "2024-12-15" },
-    { id: 2, title: "Amour et Algorithmes", author: "Sophie D.", genre: "Romance", summary: "Quand l'IA décide de trouver l'âme sœur.", datePublication: "2024-12-18" },
-    { id: 9, title: "Le Dernier Horizon", author: "Pierre B.", genre: "SF", summary: "Une odyssée vers l'inconnu.", datePublication: "2024-12-10" }
-];
-
-const MOCK_CURRENT_BOOKS = [
-    { id: 3, title: "Les Étoiles Oubliées", author: "Isaac A.", progress: 45, lastActivity: "2024-12-19" },
-    { id: 4, title: "Le Sourire du Boulanger", author: "Camille P.", progress: 12, lastActivity: "2024-12-17" }
-];
-
-const MOCK_READ_BOOKS = [
-    { id: 5, title: "Crimson Rivers", author: "Jean-C. G.", finishedDate: "12/11/2024", lastActivity: "2024-11-12" }
-];
-
-// Helper to sort by date desc
-const sortNewest = (books) => {
-    return [...books].sort((a, b) => new Date(b.datePublication) - new Date(a.datePublication));
-};
-
-const MOCK_READING_TIME_DETAILS = [
-    { title: "Les Étoiles Oubliées", status: "En cours", time: "5 h 30", isDone: false, targetSection: 'ongoing' },
-    { title: "Le Sourire du Boulanger", status: "En cours", time: "1 h 15", isDone: false, targetSection: 'ongoing' },
-    { title: "Crimson Rivers", status: "Terminé", time: "6 h 00", isDone: true, targetSection: 'read' }
-];
-
-const MOCK_GENRE_STATS = [
-    { genre: "Polar / Thriller", percentage: 45 },
-    { genre: "Science-Fiction", percentage: 30 },
-    { genre: "Romance", percentage: 15 },
-    { genre: "Feel-Good", percentage: 10 }
-];
+// MOCK DATA REMOVED
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // =========================================
 // SUB-COMPONENTS (Views)
 // =========================================
 
-const LibraryView = ({ initialSection, onClearInitial }) => {
+const LibraryView = ({ initialSection, onClearInitial, authToken }) => {
     const [activeSection, setActiveSection] = useState(initialSection || null);
+    const [newBooks, setNewBooks] = useState([]);
+    const [ongoingBooks, setOngoingBooks] = useState([]);
+    const [readBooks, setReadBooks] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (initialSection) {
             setActiveSection(initialSection);
-            onClearInitial(); // Clear it so back button works normally
+            onClearInitial();
         }
     }, [initialSection, onClearInitial]);
 
-    const renderSectionContent = () => {
-        const sortedNewBooks = sortNewest(MOCK_NEW_BOOKS);
+    // Fetch Data
+    useEffect(() => {
+        if (!authToken) return;
 
+        const fetchData = async () => {
+            try {
+                const [resNew, resReading, resCompleted] = await Promise.all([
+                    fetch(`${API_URL}/library/weekly`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
+                    fetch(`${API_URL}/library/reading`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
+                    fetch(`${API_URL}/library/completed`, { headers: { 'Authorization': `Bearer ${authToken}` } })
+                ]);
+
+                const dataNew = await resNew.json();
+                const dataReading = await resReading.json();
+                const dataCompleted = await resCompleted.json();
+
+                setNewBooks(dataNew.items || []);
+                setOngoingBooks(dataReading.items || []);
+                setReadBooks(dataCompleted.items || []);
+
+            } catch (e) {
+                console.error("Library fetch error", e);
+            }
+        };
+        fetchData();
+    }, [authToken]);
+
+    const handleStartRead = async (bookId) => {
+        try {
+            await fetch(`${API_URL}/library/${bookId}/start-or-resume`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+            navigate(`/lecture/${bookId}`);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const renderSectionContent = () => {
         switch (activeSection) {
             case 'new':
                 return (
                     <div className="content-tile tile-orange fade-in">
                         <h3>Nouveautés de la semaine</h3>
-                        {sortedNewBooks.map(book => (
-                            <div key={book.id} className="book-card">
+                        {newBooks.length === 0 ? <p>Aucun nouveau roman pour le moment.</p> : newBooks.map(book => (
+                            <div key={book.bookId} className="book-card">
                                 <div className="book-info">
                                     <h4>{book.title} <span className="genre-tag">{book.genre}</span></h4>
-                                    <p className="author">de {book.author} — Publié le {new Date(book.datePublication).toLocaleDateString()}</p>
-                                    <p className="summary">{book.summary}</p>
+                                    <p className="author">de {book.author} — Publié le {new Date(book.publishedAt).toLocaleDateString()}</p>
+                                    <p className="summary">{book.editorialSummary}</p>
                                 </div>
                                 <div className="book-actions">
-                                    <button className="btn-action">Commencer</button>
+                                    <button className="btn-action" onClick={() => handleStartRead(book.bookId)}>Commencer</button>
                                 </div>
                             </div>
                         ))}
@@ -149,19 +156,19 @@ const LibraryView = ({ initialSection, onClearInitial }) => {
                 return (
                     <div className="content-tile tile-green fade-in">
                         <h3>En cours de lecture</h3>
-                        {MOCK_CURRENT_BOOKS.map(book => (
-                            <div key={book.id} className="book-card">
+                        {ongoingBooks.length === 0 ? <p>Aucun livre en cours.</p> : ongoingBooks.map(book => (
+                            <div key={book.bookId} className="book-card">
                                 <div className="book-info">
                                     <h4>{book.title}</h4>
                                     <div className="progress-container">
                                         <div className="progress-bar-bg">
-                                            <div className="progress-bar-fill" style={{ width: `${book.progress}%` }}></div>
+                                            <div className="progress-bar-fill" style={{ width: `${book.progressPercent}%` }}></div>
                                         </div>
-                                        <span className="status-text">{book.progress}% lu</span>
+                                        <span className="status-text">{book.progressPercent}% lu</span>
                                     </div>
                                 </div>
                                 <div className="book-actions">
-                                    <button className="btn-action">Reprendre</button>
+                                    <button className="btn-action" onClick={() => handleStartRead(book.bookId)}>Reprendre</button>
                                     <button className="btn-secondary">Résumé IA</button>
                                 </div>
                             </div>
@@ -172,14 +179,14 @@ const LibraryView = ({ initialSection, onClearInitial }) => {
                 return (
                     <div className="content-tile tile-blue fade-in">
                         <h3>Romans lus</h3>
-                        {MOCK_READ_BOOKS.map(book => (
-                            <div key={book.id} className="book-card">
+                        {readBooks.length === 0 ? <p>Aucun livre terminé.</p> : readBooks.map(book => (
+                            <div key={book.bookId} className="book-card">
                                 <div className="book-info">
                                     <h4>{book.title}</h4>
-                                    <p className="author">Lu le {book.finishedDate}</p>
+                                    <p className="author">Terminé le {new Date(book.completedAt).toLocaleDateString()}</p>
                                 </div>
                                 <div className="book-actions">
-                                    <button className="btn-secondary">Relire</button>
+                                    <button className="btn-secondary" onClick={() => handleStartRead(book.bookId)}>Relire</button>
                                     <button className="btn-secondary">Résumé IA</button>
                                 </div>
                             </div>
@@ -228,67 +235,85 @@ const LibraryView = ({ initialSection, onClearInitial }) => {
 };
 
 // Reading Time with Clickable Items
-const ReadingTimeView = ({ onNavigateToLibrary }) => (
-    <div className="dashboard-detail-view fade-in">
-        <h2 className="view-title" style={{ color: '#4caf50' }}>Temps de lecture</h2>
+const ReadingTimeView = ({ onNavigateToLibrary, authToken }) => {
+    const [stats, setStats] = useState({ totalHuman: "...", detail: [] });
 
-        <div className="stat-highlight">
-            <p>Vous avez lu <strong>12 h 45</strong> sur RomanClub</p>
-            <p className="sub-stat">Moyenne : 45 min / jour</p>
+    useEffect(() => {
+        if (!authToken) return;
+        const fetchStats = async () => {
+            // Mocking detail list if backend returns empty byBook, but we fetch summary
+            const res = await fetch(`${API_URL}/stats/reading-time/summary`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+            const data = await res.json();
+
+            // Also fetch details for list if available
+            // For now using data from summary assuming it might have details or just generic
+            // The backend detailed endpoint is: /stats/reading-time/detail
+
+            setStats({ totalHuman: data.totalHuman, detail: [] });
+        };
+        fetchStats();
+    }, [authToken]);
+
+    return (
+        <div className="dashboard-detail-view fade-in">
+            <h2 className="view-title" style={{ color: '#4caf50' }}>Temps de lecture</h2>
+
+            <div className="stat-highlight">
+                <p>Vous avez lu <strong>{stats.totalHuman}</strong> sur RomanClub</p>
+                <p className="sub-stat">Moyenne : -- min / jour</p>
+            </div>
+
+            <section className="reading-list">
+                <h3 style={{ color: '#ccc', marginBottom: '1rem', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>Détail par livre</h3>
+                <p>Données détaillées bientôt disponibles.</p>
+            </section>
         </div>
+    );
+};
 
-        <section className="reading-list">
-            <h3 style={{ color: '#ccc', marginBottom: '1rem', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>Détail par livre</h3>
-            {MOCK_READING_TIME_DETAILS.map((item, idx) => (
-                <div key={idx} className="reading-item clickable-row" onClick={() => onNavigateToLibrary(item.targetSection)}>
-                    <div className="book-info-minimal">
-                        <span className="book-title" style={{ textDecoration: 'underline', cursor: 'pointer' }}>{item.title}</span>
-                        <div className="book-meta-sub">
-                            <span className={`status-text-simple ${item.isDone ? 'done' : 'ongoing'}`}>
-                                {item.status}
-                            </span>
-                        </div>
-                    </div>
-                    <span className="time-spent">{item.time}</span>
-                </div>
-            ))}
-        </section>
-        <style>{`
-            .clickable-row { cursor: pointer; transition: background 0.2s; }
-            .clickable-row:hover { background: rgba(255,255,255,0.05); }
-        `}</style>
-    </div>
-);
+const ReadingPathView = ({ authToken }) => {
+    const [stats, setStats] = useState({ genresRead: [], genreBreakdown: [], editorialInsight: "" });
 
-const ReadingPathView = () => (
-    <div className="dashboard-detail-view fade-in">
-        <h2 className="view-title" style={{ color: '#ffca28' }}>Mon parcours de lecture</h2>
+    useEffect(() => {
+        if (!authToken) return;
+        const fetchPath = async () => {
+            const res = await fetch(`${API_URL}/stats/reading-journey`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+            const data = await res.json();
+            setStats(data);
+        };
+        fetchPath();
+    }, [authToken]);
 
-        <div className="path-section">
-            <h3>Vos genres de prédilection</h3>
-            <ul className="genres-list">
-                {MOCK_GENRE_STATS.map((stat, idx) => (
-                    <li key={idx} className="dist-item">
-                        <div className="dist-header">
-                            <span>{stat.genre}</span>
-                            <span>{stat.percentage} %</span>
-                        </div>
-                        <div className="dist-bar-bg">
-                            <div className="dist-bar-fill" style={{ width: `${stat.percentage}%`, backgroundColor: idx === 0 ? '#ffca28' : '#666' }}></div>
-                        </div>
-                    </li>
-                ))}
-            </ul>
+    return (
+        <div className="dashboard-detail-view fade-in">
+            <h2 className="view-title" style={{ color: '#ffca28' }}>Mon parcours de lecture</h2>
+
+            <div className="path-section">
+                <h3>Vos genres de prédilection</h3>
+                <ul className="genres-list">
+                    {stats.genreBreakdown.map((stat, idx) => (
+                        <li key={idx} className="dist-item">
+                            <div className="dist-header">
+                                <span>{stat.genre}</span>
+                                <span>{stat.percent} %</span>
+                            </div>
+                            <div className="dist-bar-bg">
+                                <div className="dist-bar-fill" style={{ width: `${stat.percent}%`, backgroundColor: idx === 0 ? '#ffca28' : '#666' }}></div>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+            <div className="editorial-box">
+                <p>
+                    <strong>Analyse de votre profil :</strong><br />
+                    {stats.editorialInsight}
+                </p>
+            </div>
         </div>
-
-        <div className="editorial-box">
-            <p>
-                <strong>Analyse de votre profil :</strong><br />
-                Votre parcours montre une préférence marquée pour les intrigues à suspense (Polar) et une évolution récente vers les univers d'anticipation (Science-Fiction).
-            </p>
-        </div>
-    </div>
-);
+    );
+};
 
 // --- Settings Sub-Views ---
 
@@ -332,12 +357,31 @@ const SettingsInvoicesView = ({ invoices, onBack }) => (
 );
 
 // Expanded Account View (Synthesis)
-const SettingsAccountView = ({ booksCount, onBack, onNavigateToLibrary }) => {
-    // Merge all books and sort by lastActivity
-    const allBooks = [
-        ...MOCK_CURRENT_BOOKS.map(b => ({ ...b, status: 'En cours', type: 'ongoing' })),
-        ...MOCK_READ_BOOKS.map(b => ({ ...b, status: 'Terminé', type: 'read' }))
-    ].sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity));
+const SettingsAccountView = ({ booksCount, onBack, onNavigateToLibrary, authToken }) => {
+    // We can fetch user's books here too to show the list if needed, or just booksCount
+    // The previous design had a list of all reads.
+    // Let's implement fetching all "reading" + "completed" to show here.
+    const [allBooks, setAllBooks] = useState([]);
+
+    useEffect(() => {
+        if (!authToken) return;
+        const fetchAll = async () => {
+            const [resRead, resComp] = await Promise.all([
+                fetch(`${API_URL}/library/reading`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
+                fetch(`${API_URL}/library/completed`, { headers: { 'Authorization': `Bearer ${authToken}` } })
+            ]);
+            const dataRead = await resRead.json();
+            const dataComp = await resComp.json();
+
+            const merged = [
+                ...(dataRead.items || []).map(b => ({ ...b, status: 'En cours', type: 'ongoing' })),
+                ...(dataComp.items || []).map(b => ({ ...b, status: 'Terminé', type: 'read' }))
+            ];
+            // Sort by activity/completion? The API already sorts by date. Just concat or re-sort.
+            setAllBooks(merged);
+        };
+        fetchAll();
+    }, [authToken]);
 
     return (
         <div className="dashboard-detail-view fade-in">
@@ -350,8 +394,8 @@ const SettingsAccountView = ({ booksCount, onBack, onNavigateToLibrary }) => {
 
             <section className="account-books-list">
                 <h3>Vos lectures (Synthèse)</h3>
-                {allBooks.map((book) => (
-                    <div key={book.id} className="reading-item clickable-row" onClick={() => onNavigateToLibrary(book.type)}>
+                {allBooks.length === 0 ? <p>Aucun livre commencé.</p> : allBooks.map((book) => (
+                    <div key={book.bookId} className="reading-item clickable-row" onClick={() => onNavigateToLibrary(book.type)}>
                         <div className="book-info-minimal">
                             <span
                                 className="book-title"
@@ -362,9 +406,6 @@ const SettingsAccountView = ({ booksCount, onBack, onNavigateToLibrary }) => {
                             <div className="book-meta-sub">
                                 <span className={`status-text-simple ${book.status === 'Terminé' ? 'done' : 'ongoing'}`}>
                                     {book.status}
-                                </span>
-                                <span style={{ marginLeft: '10px', fontSize: '0.8rem', color: '#666' }}>
-                                    Dernière activité : {new Date(book.lastActivity).toLocaleDateString()}
                                 </span>
                             </div>
                         </div>
@@ -629,7 +670,7 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
     // --- Render Logic ---
 
     if (viewMode === 'invoices') return <SettingsInvoicesView invoices={invoices} onBack={() => setViewMode('main')} />;
-    if (viewMode === 'books') return <SettingsAccountView booksCount={booksCount} onBack={() => setViewMode('main')} onNavigateToLibrary={onNavigateToLibrary} />;
+    if (viewMode === 'books') return <SettingsAccountView booksCount={booksCount} onBack={() => setViewMode('main')} onNavigateToLibrary={onNavigateToLibrary} authToken={authToken} />;
 
     // Main Settings View
     return (
@@ -968,10 +1009,11 @@ const DashboardPage = () => {
                             <LibraryView
                                 initialSection={libraryDefaultSection}
                                 onClearInitial={() => setLibraryDefaultSection(null)}
+                                authToken={authToken}
                             />
                         )}
-                        {view === 'stats' && <ReadingTimeView onNavigateToLibrary={handleNavigateToLibrary} />}
-                        {view === 'path' && <ReadingPathView />}
+                        {view === 'stats' && <ReadingTimeView onNavigateToLibrary={handleNavigateToLibrary} authToken={authToken} />}
+                        {view === 'path' && <ReadingPathView authToken={authToken} />}
 
                         {view === 'settings' && (
                             <SettingsView
