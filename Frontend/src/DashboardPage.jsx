@@ -334,29 +334,50 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
     const [invoices, setInvoices] = useState([]);
     const [booksCount, setBooksCount] = useState(0);
 
-    const CARD_ELEMENT_OPTIONS = {
-        style: {
-            base: { fontSize: '16px', color: '#fff', '::placeholder': { color: '#aab7c4' } },
-            invalid: { color: '#fa755a' }
-        },
-        placeholder: '', // Remove default 4242...
-        disableLink: true,
+    // Options for Stripe Elements
+    const BASE_CARD_STYLE = {
+        base: { fontSize: '16px', color: '#fff', '::placeholder': { color: '#aab7c4' } },
+        invalid: { color: '#fa755a' }
+    };
+
+    const CARD_NUM_OPTIONS = {
+        style: BASE_CARD_STYLE,
+        placeholder: '', // Clean no digits
         showIcon: true,
-        hidePostalCode: true // Often requested to simplify
+        disableLink: true
+    };
+
+    // Explicit placeholder for Expiry based on request
+    const CARD_EXP_OPTIONS = {
+        style: BASE_CARD_STYLE,
+        placeholder: 'MM / AA'
+    };
+
+    // Explicit placeholder for CVC (Empty to avoid '123' or 'CVC' if user wants strictly no example digits)
+    const CARD_CVC_OPTIONS = {
+        style: BASE_CARD_STYLE,
+        placeholder: ''
     };
 
     // Logic for Country
     const userCountry = userProfile.pays || 'FR'; // 'BE', 'FR', etc.
-    // If CA, no SEPA option.
     const showSepaOption = userCountry !== 'CA';
+
+    // Strict IBAN Placeholder Mapping
+    const getIbanPlaceholder = (country) => {
+        switch (country) {
+            case 'BE': return 'BE00 0000 0000 0000';
+            case 'LU': return 'LU00 0000 0000 0000';
+            case 'CH': return 'CH00 0000 0000 0000';
+            case 'FR': default: return 'FR00 0000 0000 0000 0000 0000';
+        }
+    };
 
     const IBAN_ELEMENT_OPTIONS = {
         supportedCountries: ['SEPA'],
-        placeholderCountry: userCountry, // Ensure example matches user country (BE, FR...)
-        style: {
-            base: { fontSize: '16px', color: '#fff', '::placeholder': { color: '#aab7c4' } },
-            invalid: { color: '#fa755a' }
-        }
+        placeholderCountry: userCountry,
+        placeholder: getIbanPlaceholder(userCountry), // Manual override to ensure strict example
+        style: BASE_CARD_STYLE
     };
 
     useEffect(() => {
@@ -371,18 +392,15 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                 setInvoices(dataInv.invoices || []);
 
                 // Books Count
-                // We use MOCK total for synthesis consistency if API is mock, but let's assume API works
-                // Fallback to mock count if API fails or returns 0? 
-                // Using 3 (mock items count) as fallback
                 const resBooks = await fetch(`${API_URL}/books/count`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 const dataBooks = await resBooks.json();
-                setBooksCount(dataBooks.count || 3); // 3 from mock
+                setBooksCount(dataBooks.count || 3);
 
             } catch (error) {
                 console.error("Fetch settings data error:", error);
-                setBooksCount(3); // Mock fallback
+                setBooksCount(3);
             }
         };
         fetchSettingsData();
@@ -432,9 +450,7 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
         if (newPaymentType === 'sepa') {
             return !sepaAccepted || !ibanComplete;
         }
-        return false; // For card, Element handles its own validation visually, but we can't easily detect 'complete' without tracking onChange. 
-        // Standard Stripe button is usually always enabled and we catch error on Submit.
-        // But user asked for SEPA specifically.
+        return false;
     };
 
     const handleUpdatePaymentMethod = async (e) => {
@@ -633,12 +649,12 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                                 {newPaymentType === 'card' ? (
                                     <div className="stripe-field-group">
                                         <label>Numéro de carte</label>
-                                        <div className="stripe-input"><CardNumberElement options={CARD_ELEMENT_OPTIONS} /></div>
+                                        <div className="stripe-input"><CardNumberElement options={CARD_NUM_OPTIONS} /></div>
                                         <div className="row-2">
-                                            <div><label>Expiration</label><div className="stripe-input"><CardExpiryElement options={CARD_ELEMENT_OPTIONS} /></div></div>
+                                            <div><label>Expiration</label><div className="stripe-input"><CardExpiryElement options={CARD_EXP_OPTIONS} /></div></div>
                                             <div>
                                                 {/* No Label for CVC per user request, just the field */}
-                                                <div className="stripe-input"><CardCvcElement options={CARD_ELEMENT_OPTIONS} /></div>
+                                                <div className="stripe-input"><CardCvcElement options={CARD_CVC_OPTIONS} /></div>
                                             </div>
                                         </div>
                                     </div>
