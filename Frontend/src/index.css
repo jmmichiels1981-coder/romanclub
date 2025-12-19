@@ -98,7 +98,7 @@ h1 {
   max-width: 300px;
   padding: 1rem;
   margin: 0.5rem 0;
-  border-radius: 50px;
+  border-radius: 50px !important;
   text-decoration: none;
   font-weight: 600;
   text-transform: uppercase;
@@ -114,16 +114,17 @@ h1 {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-  color: white;
-  box-shadow: 0 4px 15px rgba(255, 85, 0, 0.3);
+  background: linear-gradient(135deg, #ff5500, #ff7700) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(255, 85, 0, 0.3) !important;
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-  color: white;
-  border: none;
-  box-shadow: 0 4px 15px rgba(255, 85, 0, 0.3);
+  background: linear-gradient(135deg, #ff5500, #ff7700) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(255, 85, 0, 0.3) !important;
 }
 
 .footer {
