@@ -120,9 +120,10 @@ h1 {
 }
 
 .btn-secondary {
-  background: transparent;
-  color: var(--primary-color);
-  border: 2px solid var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(255, 85, 0, 0.3);
 }
 
 .footer {
