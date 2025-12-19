@@ -1,7 +1,15 @@
 const { MongoClient } = require("mongodb");
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017";
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+    console.error("❌ Erreur : MONGODB_URI est manquant dans le fichier .env");
+    process.exit(1);
+}
+
+console.log("Tentative de connexion à MongoDB...");
 const DB_NAME = "romanclub";
 
 const BOOKS_DATA = [
