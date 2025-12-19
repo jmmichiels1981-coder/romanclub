@@ -10,7 +10,8 @@ function LoginPage() {
     const [password, setPassword] = useState("");
     const [pin, setPin] = useState("");
 
-    // Load saved email on mount
+    const [isLoading, setIsLoading] = useState(false);
+
     // Load saved email on mount
     useEffect(() => {
         const savedEmail = localStorage.getItem("savedEmail");
@@ -21,6 +22,7 @@ function LoginPage() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
 
         try {
             const response = await fetch(`${API_URL}/login`, {
@@ -40,11 +42,13 @@ function LoginPage() {
                 navigate("/dashboard");
             } else {
                 alert("Erreur de connexion : " + (data.message || "Identifiants incorrects"));
+                setIsLoading(false);
             }
         } catch (error) {
             console.error("Login error:", error);
             // Fallback for demo if backend not running locally
             alert("Erreur de connexion au serveur.");
+            setIsLoading(false);
         }
     };
 
@@ -67,6 +71,7 @@ function LoginPage() {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            disabled={isLoading}
                         />
                     </div>
 
@@ -79,6 +84,7 @@ function LoginPage() {
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            disabled={isLoading}
                         />
                     </div>
 
@@ -92,11 +98,12 @@ function LoginPage() {
                             required
                             value={pin}
                             onChange={(e) => setPin(e.target.value)}
+                            disabled={isLoading}
                         />
                     </div>
 
-                    <button type="submit" className="login-btn">
-                        SE CONNECTER
+                    <button type="submit" className="login-btn" disabled={isLoading} style={{ opacity: isLoading ? 0.7 : 1 }}>
+                        {isLoading ? "CONNEXION EN COURS..." : "SE CONNECTER"}
                     </button>
                 </form>
 

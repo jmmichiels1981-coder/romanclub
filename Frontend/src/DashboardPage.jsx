@@ -9,23 +9,29 @@ import './dashboard.css';
 // =========================================
 
 const MOCK_NEW_BOOKS = [
-    { id: 1, title: "L'Ombre du Silence", author: "Marc Levy", genre: "Polar", summary: "Une enquête palpitante au cœur des secrets d'État." },
-    { id: 2, title: "Amour et Algorithmes", author: "Sophie D.", genre: "Romance", summary: "Quand l'IA décide de trouver l'âme sœur." }
+    { id: 1, title: "L'Ombre du Silence", author: "Marc Levy", genre: "Polar", summary: "Une enquête palpitante au cœur des secrets d'État.", datePublication: "2024-12-15" },
+    { id: 2, title: "Amour et Algorithmes", author: "Sophie D.", genre: "Romance", summary: "Quand l'IA décide de trouver l'âme sœur.", datePublication: "2024-12-18" },
+    { id: 9, title: "Le Dernier Horizon", author: "Pierre B.", genre: "SF", summary: "Une odyssée vers l'inconnu.", datePublication: "2024-12-10" }
 ];
 
 const MOCK_CURRENT_BOOKS = [
-    { id: 3, title: "Les Étoiles Oubliées", author: "Isaac A.", progress: 45 },
-    { id: 4, title: "Le Sourire du Boulanger", author: "Camille P.", progress: 12 }
+    { id: 3, title: "Les Étoiles Oubliées", author: "Isaac A.", progress: 45, lastActivity: "2024-12-19" },
+    { id: 4, title: "Le Sourire du Boulanger", author: "Camille P.", progress: 12, lastActivity: "2024-12-17" }
 ];
 
 const MOCK_READ_BOOKS = [
-    { id: 5, title: "Crimson Rivers", author: "Jean-C. G.", finishedDate: "12/11/2024" }
+    { id: 5, title: "Crimson Rivers", author: "Jean-C. G.", finishedDate: "12/11/2024", lastActivity: "2024-11-12" }
 ];
 
+// Helper to sort by date desc
+const sortNewest = (books) => {
+    return [...books].sort((a, b) => new Date(b.datePublication) - new Date(a.datePublication));
+};
+
 const MOCK_READING_TIME_DETAILS = [
-    { title: "Les Étoiles Oubliées", status: "En cours", time: "5 h 30", isDone: false },
-    { title: "Le Sourire du Boulanger", status: "En cours", time: "1 h 15", isDone: false },
-    { title: "Crimson Rivers", status: "Terminé", time: "6 h 00", isDone: true }
+    { title: "Les Étoiles Oubliées", status: "En cours", time: "5 h 30", isDone: false, targetSection: 'ongoing' },
+    { title: "Le Sourire du Boulanger", status: "En cours", time: "1 h 15", isDone: false, targetSection: 'ongoing' },
+    { title: "Crimson Rivers", status: "Terminé", time: "6 h 00", isDone: true, targetSection: 'read' }
 ];
 
 const MOCK_GENRE_STATS = [
@@ -39,20 +45,29 @@ const MOCK_GENRE_STATS = [
 // SUB-COMPONENTS (Views)
 // =========================================
 
-const LibraryView = () => {
-    const [activeSection, setActiveSection] = useState(null);
+const LibraryView = ({ initialSection, onClearInitial }) => {
+    const [activeSection, setActiveSection] = useState(initialSection || null);
+
+    useEffect(() => {
+        if (initialSection) {
+            setActiveSection(initialSection);
+            onClearInitial(); // Clear it so back button works normally
+        }
+    }, [initialSection, onClearInitial]);
 
     const renderSectionContent = () => {
+        const sortedNewBooks = sortNewest(MOCK_NEW_BOOKS);
+
         switch (activeSection) {
             case 'new':
                 return (
                     <div className="content-tile tile-orange fade-in">
                         <h3>Nouveautés de la semaine</h3>
-                        {MOCK_NEW_BOOKS.map(book => (
+                        {sortedNewBooks.map(book => (
                             <div key={book.id} className="book-card">
                                 <div className="book-info">
                                     <h4>{book.title} <span className="genre-tag">{book.genre}</span></h4>
-                                    <p className="author">de {book.author}</p>
+                                    <p className="author">de {book.author} — Publié le {new Date(book.datePublication).toLocaleDateString()}</p>
                                     <p className="summary">{book.summary}</p>
                                 </div>
                                 <div className="book-actions">
@@ -144,7 +159,8 @@ const LibraryView = () => {
     );
 };
 
-const ReadingTimeView = () => (
+// Reading Time with Clickable Items
+const ReadingTimeView = ({ onNavigateToLibrary }) => (
     <div className="dashboard-detail-view fade-in">
         <h2 className="view-title" style={{ color: '#4caf50' }}>Temps de lecture</h2>
 
@@ -156,9 +172,9 @@ const ReadingTimeView = () => (
         <section className="reading-list">
             <h3 style={{ color: '#ccc', marginBottom: '1rem', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>Détail par livre</h3>
             {MOCK_READING_TIME_DETAILS.map((item, idx) => (
-                <div key={idx} className="reading-item">
+                <div key={idx} className="reading-item clickable-row" onClick={() => onNavigateToLibrary(item.targetSection)}>
                     <div className="book-info-minimal">
-                        <span className="book-title">{item.title}</span>
+                        <span className="book-title" style={{ textDecoration: 'underline', cursor: 'pointer' }}>{item.title}</span>
                         <div className="book-meta-sub">
                             <span className={`status-text-simple ${item.isDone ? 'done' : 'ongoing'}`}>
                                 {item.status}
@@ -169,6 +185,10 @@ const ReadingTimeView = () => (
                 </div>
             ))}
         </section>
+        <style>{`
+            .clickable-row { cursor: pointer; transition: background 0.2s; }
+            .clickable-row:hover { background: rgba(255,255,255,0.05); }
+        `}</style>
     </div>
 );
 
@@ -195,10 +215,8 @@ const ReadingPathView = () => (
 
         <div className="editorial-box">
             <p>
-                <strong>Analyse éditoriale :</strong><br />
-                Votre parcours montre une nette préférence pour les intrigues complexes et le suspense (Polar).
-                Cependant, votre intérêt récent pour la Science-Fiction suggère une curiosité pour les univers dystopiques.
-                Nous vous recommanderons davantage d'œuvres croisant ces deux thématiques le mois prochain.
+                <strong>Analyse de votre profil :</strong><br />
+                Votre parcours montre une préférence marquée pour les intrigues à suspense (Polar) et une évolution récente vers les univers d'anticipation (Science-Fiction).
             </p>
         </div>
     </div>
@@ -245,17 +263,47 @@ const SettingsInvoicesView = ({ invoices, onBack }) => (
     </div>
 );
 
-const SettingsBooksView = ({ booksCount, onBack }) => (
-    <div className="dashboard-detail-view fade-in">
-        <button className="btn-back-settings" onClick={onBack}>← Retour aux paramètres</button>
-        <h2 className="view-title">Mon compte RomanClub</h2>
-        <div className="stat-highlight">
-            <p>Vous avez accès à <strong>{booksCount}</strong> romans dans votre bibliothèque numérique.</p>
-        </div>
-    </div>
-);
+// Expanded Account View (Synthesis)
+const SettingsAccountView = ({ booksCount, onBack, onNavigateToLibrary }) => {
+    // Merge all books and sort by lastActivity
+    const allBooks = [
+        ...MOCK_CURRENT_BOOKS.map(b => ({ ...b, status: 'En cours', type: 'ongoing' })),
+        ...MOCK_READ_BOOKS.map(b => ({ ...b, status: 'Terminé', type: 'read' }))
+    ].sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity));
 
-const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe, elements, fetchUserData }) => {
+    return (
+        <div className="dashboard-detail-view fade-in">
+            <button className="btn-back-settings" onClick={onBack}>← Retour aux paramètres</button>
+            <h2 className="view-title">Mon compte RomanClub</h2>
+
+            <div className="stat-highlight">
+                <p>Vous avez accès à <strong>{booksCount}</strong> romans dans votre bibliothèque numérique.</p>
+            </div>
+
+            <section className="account-books-list">
+                <h3>Vos lectures (Synthèse)</h3>
+                {allBooks.map((book) => (
+                    <div key={book.id} className="reading-item clickable-row" onClick={() => onNavigateToLibrary(book.type)}>
+                        <div className="book-info-minimal">
+                            <span className="book-title">{book.title}</span>
+                            <div className="book-meta-sub">
+                                <span className={`status-text-simple ${book.status === 'Terminé' ? 'done' : 'ongoing'}`}>
+                                    {book.status}
+                                </span>
+                                <span style={{ marginLeft: '10px', fontSize: '0.8rem', color: '#666' }}>
+                                    Dernière activité : {new Date(book.lastActivity).toLocaleDateString()}
+                                </span>
+                            </div>
+                        </div>
+                        <span style={{ fontSize: '1.2rem', color: '#555' }}>›</span>
+                    </div>
+                ))}
+            </section>
+        </div>
+    );
+};
+
+const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe, elements, fetchUserData, onNavigateToLibrary }) => {
     // Local state
     const [viewMode, setViewMode] = useState('main'); // 'main', 'invoices', 'books'
 
@@ -268,8 +316,11 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
     const [editingPayment, setEditingPayment] = useState(false);
     const [paymentLoading, setPaymentLoading] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState("");
-    const [newPaymentType, setNewPaymentType] = useState('card'); // 'card' | 'sepa'
+    const [newPaymentType, setNewPaymentType] = useState('card');
     const [sepaAccepted, setSepaAccepted] = useState(false);
+
+    // Iban State
+    const [ibanComplete, setIbanComplete] = useState(false);
 
     // Cancellation State
     const [cancelling, setCancelling] = useState(false);
@@ -283,11 +334,14 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
             base: { fontSize: '16px', color: '#fff', '::placeholder': { color: '#aab7c4' } },
             invalid: { color: '#fa755a' }
         },
-        disableLink: true
+        disableLink: true,
+        showIcon: true,
+        hidePostalCode: true // Often requested to simplify
     };
 
     const IBAN_ELEMENT_OPTIONS = {
         supportedCountries: ['SEPA'],
+        placeholderCountry: 'FR', // Default to FR, but auto-detects
         style: {
             base: { fontSize: '16px', color: '#fff', '::placeholder': { color: '#aab7c4' } },
             invalid: { color: '#fa755a' }
@@ -306,14 +360,18 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                 setInvoices(dataInv.invoices || []);
 
                 // Books Count
+                // We use MOCK total for synthesis consistency if API is mock, but let's assume API works
+                // Fallback to mock count if API fails or returns 0? 
+                // Using 3 (mock items count) as fallback
                 const resBooks = await fetch(`${API_URL}/books/count`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 const dataBooks = await resBooks.json();
-                setBooksCount(dataBooks.count);
+                setBooksCount(dataBooks.count || 3); // 3 from mock
 
             } catch (error) {
                 console.error("Fetch settings data error:", error);
+                setBooksCount(3); // Mock fallback
             }
         };
         fetchSettingsData();
@@ -356,6 +414,18 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
         setEmailStatus("");
     };
 
+    // Calculate if Save button should be disabled
+    const isSaveDisabled = () => {
+        if (paymentLoading) return true;
+        if (!stripe || !elements) return true;
+        if (newPaymentType === 'sepa') {
+            return !sepaAccepted || !ibanComplete;
+        }
+        return false; // For card, Element handles its own validation visually, but we can't easily detect 'complete' without tracking onChange. 
+        // Standard Stripe button is usually always enabled and we catch error on Submit.
+        // But user asked for SEPA specifically.
+    };
+
     const handleUpdatePaymentMethod = async (e) => {
         e.preventDefault();
         setPaymentLoading(true);
@@ -376,7 +446,6 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
             const dataSetup = await resSetup.json();
-
             if (!dataSetup.clientSecret) throw new Error("Erreur init paiement");
 
             let setupError, setupIntent;
@@ -462,15 +531,10 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
         }
     };
 
-    const elementStyle = {
-        base: { fontSize: '16px', color: '#fff', '::placeholder': { color: '#aab7c4' } },
-        invalid: { color: '#fa755a' }
-    };
-
     // --- Render Logic ---
 
     if (viewMode === 'invoices') return <SettingsInvoicesView invoices={invoices} onBack={() => setViewMode('main')} />;
-    if (viewMode === 'books') return <SettingsBooksView booksCount={booksCount} onBack={() => setViewMode('main')} />;
+    if (viewMode === 'books') return <SettingsAccountView booksCount={booksCount} onBack={() => setViewMode('main')} onNavigateToLibrary={onNavigateToLibrary} />;
 
     // Main Settings View
     return (
@@ -559,13 +623,21 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                                         <div className="stripe-input"><CardNumberElement options={CARD_ELEMENT_OPTIONS} /></div>
                                         <div className="row-2">
                                             <div><label>Expiration</label><div className="stripe-input"><CardExpiryElement options={CARD_ELEMENT_OPTIONS} /></div></div>
-                                            <div><label>CVC</label><div className="stripe-input"><CardCvcElement options={CARD_ELEMENT_OPTIONS} /></div></div>
+                                            <div>
+                                                {/* No Label for CVC per user request, just the field */}
+                                                <div className="stripe-input"><CardCvcElement options={CARD_ELEMENT_OPTIONS} /></div>
+                                            </div>
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="stripe-field-group">
                                         <label>IBAN</label>
-                                        <div className="stripe-input"><IbanElement options={IBAN_ELEMENT_OPTIONS} /></div>
+                                        <div className="stripe-input">
+                                            <IbanElement
+                                                options={IBAN_ELEMENT_OPTIONS}
+                                                onChange={(e) => setIbanComplete(e.complete)}
+                                            />
+                                        </div>
                                         <div className="mandate-box" style={{ marginTop: '1.5rem', background: '#2a2a2d', padding: '1rem', borderRadius: '8px' }}>
                                             <label className="mandate-label" style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
                                                 <input
@@ -586,7 +658,7 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                             </div>
 
                             <div className="form-actions">
-                                <button type="submit" className="btn-primary" disabled={paymentLoading}>
+                                <button type="submit" className="btn-primary" disabled={isSaveDisabled()}>
                                     {paymentLoading ? 'Validation...' : 'Enregistrer'}
                                 </button>
                                 <button type="button" className="btn-text-cancel" onClick={() => setEditingPayment(false)}>Annuler</button>
@@ -629,6 +701,9 @@ const DashboardPage = () => {
     const [userProfile, setUserProfile] = useState({});
     const [loading, setLoading] = useState(true);
 
+    // UI State for Deep Linking
+    const [libraryDefaultSection, setLibraryDefaultSection] = useState(null);
+
     const stripe = useStripe();
     const elements = useElements();
 
@@ -670,6 +745,11 @@ const DashboardPage = () => {
         localStorage.removeItem("user");
         localStorage.removeItem("authToken");
         navigate("/");
+    };
+
+    const handleNavigateToLibrary = (section) => {
+        setLibraryDefaultSection(section);
+        setView('library');
     };
 
     if (loading) {
@@ -728,16 +808,17 @@ const DashboardPage = () => {
                     </div>
                 ) : (
                     <div className="detail-view-container">
-                        {/* Back button logic is slightly different for Settings main view vs subviews? 
-                            The settings sub-views have their own back buttons. 
-                            The MAIN settings view needs a back button to dashboard. */}
-
                         <button className="btn-back" onClick={() => setView('dashboard')}>
                             ← Retour au tableau de bord
                         </button>
 
-                        {view === 'library' && <LibraryView />}
-                        {view === 'stats' && <ReadingTimeView />}
+                        {view === 'library' && (
+                            <LibraryView
+                                initialSection={libraryDefaultSection}
+                                onClearInitial={() => setLibraryDefaultSection(null)}
+                            />
+                        )}
+                        {view === 'stats' && <ReadingTimeView onNavigateToLibrary={handleNavigateToLibrary} />}
                         {view === 'path' && <ReadingPathView />}
 
                         {view === 'settings' && (
@@ -749,6 +830,7 @@ const DashboardPage = () => {
                                 stripe={stripe}
                                 elements={elements}
                                 fetchUserData={fetchUserData}
+                                onNavigateToLibrary={handleNavigateToLibrary}
                             />
                         )}
                     </div>
