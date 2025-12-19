@@ -70,53 +70,81 @@ const LibraryView = () => {
                 return (
                     <div className="content-tile tile-green fade-in">
                         <h3>En cours de lecture</h3>
-                        <div className="book-actions">
-                            <button className="btn-secondary">Relire</button>
-                            <button className="btn-secondary">Résumé IA</button>
-                        </div>
+                        {MOCK_CURRENT_BOOKS.map(book => (
+                            <div key={book.id} className="book-card">
+                                <div className="book-info">
+                                    <h4>{book.title}</h4>
+                                    <div className="progress-container">
+                                        <div className="progress-bar-bg">
+                                            <div className="progress-bar-fill" style={{ width: `${book.progress}%` }}></div>
+                                        </div>
+                                        <span className="status-text">{book.progress}% lu</span>
+                                    </div>
+                                </div>
+                                <div className="book-actions">
+                                    <button className="btn-action">Reprendre</button>
+                                    <button className="btn-secondary">Résumé IA</button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                ))
-        }
-                    </div >
+                );
+            case 'read':
+                return (
+                    <div className="content-tile tile-blue fade-in">
+                        <h3>Romans lus</h3>
+                        {MOCK_READ_BOOKS.map(book => (
+                            <div key={book.id} className="book-card">
+                                <div className="book-info">
+                                    <h4>{book.title}</h4>
+                                    <p className="author">Lu le {book.finishedDate}</p>
+                                </div>
+                                <div className="book-actions">
+                                    <button className="btn-secondary">Relire</button>
+                                    <button className="btn-secondary">Résumé IA</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 );
             default:
-return null;
+                return null;
         }
     };
 
-return (
-    <div className="dashboard-detail-view fade-in">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 className="view-title" style={{ borderBottom: 'none', marginBottom: 0 }}>Ma Bibliothèque</h2>
-            {activeSection && (
-                <button className="btn-back-settings" onClick={() => setActiveSection(null)} style={{ marginBottom: 0 }}>
-                    ← Retour au menu
-                </button>
+    return (
+        <div className="dashboard-detail-view fade-in">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h2 className="view-title" style={{ borderBottom: 'none', marginBottom: 0 }}>Ma Bibliothèque</h2>
+                {activeSection && (
+                    <button className="btn-back-settings" onClick={() => setActiveSection(null)} style={{ marginBottom: 0 }}>
+                        ← Retour au menu
+                    </button>
+                )}
+            </div>
+            <div style={{ borderBottom: '1px solid #333', marginBottom: '2rem', marginTop: '0.5rem' }}></div>
+
+            {!activeSection ? (
+                <div className="tiles-grid">
+                    <div className="dash-tile tile-orange" onClick={() => setActiveSection('new')}>
+                        <div className="tile-icon">🔥</div>
+                        <h2>Nouveautés de la semaine</h2>
+                    </div>
+
+                    <div className="dash-tile tile-green" onClick={() => setActiveSection('ongoing')}>
+                        <div className="tile-icon">📖</div>
+                        <h2>En cours de lecture</h2>
+                    </div>
+
+                    <div className="dash-tile tile-blue" onClick={() => setActiveSection('read')}>
+                        <div className="tile-icon">✅</div>
+                        <h2>Romans lus</h2>
+                    </div>
+                </div>
+            ) : (
+                renderSectionContent()
             )}
         </div>
-        <div style={{ borderBottom: '1px solid #333', marginBottom: '2rem', marginTop: '0.5rem' }}></div>
-
-        {!activeSection ? (
-            <div className="tiles-grid">
-                <div className="dash-tile tile-orange" onClick={() => setActiveSection('new')}>
-                    <div className="tile-icon">🔥</div>
-                    <h2>Nouveautés de la semaine</h2>
-                </div>
-
-                <div className="dash-tile tile-green" onClick={() => setActiveSection('ongoing')}>
-                    <div className="tile-icon">📖</div>
-                    <h2>En cours de lecture</h2>
-                </div>
-
-                <div className="dash-tile tile-blue" onClick={() => setActiveSection('read')}>
-                    <div className="tile-icon">✅</div>
-                    <h2>Romans lus</h2>
-                </div>
-            </div>
-        ) : (
-            renderSectionContent()
-        )}
-    </div>
                         billing_details: { email: userProfile.email, name: `${userProfile.prenom} ${userProfile.nom}` }
 }
                 });
