@@ -2,7 +2,75 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement, IbanElement } from "@stripe/react-stripe-js";
 import WelcomeModal from './WelcomeModal';
+import TutorialModal from './TutorialModal';
 import './dashboard.css';
+
+// =========================================
+// TUTORIAL CONTENT CONSTANTS
+// =========================================
+const TUTORIAL_CONTENT = {
+    library: {
+        title: "📘 Votre bibliothèque RomanClub",
+        content: (
+            <>
+                <p className="welcome-text">Ici se trouvent tous les romans disponibles dans votre abonnement.</p>
+                <ul className="welcome-list">
+                    <li><strong>Nouveautés de la semaine :</strong> le roman publié le dimanche, avec son résumé éditorial.</li>
+                    <li><strong>Romans en cours :</strong> ceux que vous avez commencés. Vous pouvez reprendre exactement où vous vous êtes arrêté, et générer un Résumé IA par chapitre.</li>
+                    <li><strong>Romans lus :</strong> votre historique de lecture. Vous pouvez relire un roman ou générer un Résumé IA complet.</li>
+                </ul>
+                <p className="welcome-text">Cliquez sur <strong>Lire</strong> pour commencer ou reprendre un roman.</p>
+            </>
+        )
+    },
+    stats: { // Reading Time
+        title: "⏱️ Votre temps de lecture",
+        content: (
+            <>
+                <p className="welcome-text">RomanClub suit votre temps de lecture pour valoriser votre parcours, sans comparaison ni pression.</p>
+                <ul className="welcome-list">
+                    <li>Temps total de lecture depuis votre inscription</li>
+                    <li>Moyenne quotidienne</li>
+                    <li>Détail par roman (en cours ou terminé)</li>
+                </ul>
+                <p className="welcome-text">Chaque titre est cliquable pour revenir directement au roman concerné.</p>
+            </>
+        )
+    },
+    path: { // Reading Path
+        title: "📊 Votre parcours de lecteur",
+        content: (
+            <>
+                <p className="welcome-text">Cette section met en lumière votre parcours de lecture au fil du temps.</p>
+                <p className="welcome-text">Vous y verrez :</p>
+                <ul className="welcome-list">
+                    <li>les genres que vous lisez le plus</li>
+                    <li>la répartition de votre temps par genre</li>
+                    <li>l’évolution naturelle de vos goûts</li>
+                </ul>
+                <div style={{ marginTop: '1rem', padding: '10px', background: 'rgba(255,165,0,0.1)', borderLeft: '3px solid #ff7700', borderRadius: '4px' }}>
+                    <strong>⚠️ Aucune recommandation automatique :</strong><br />
+                    RomanClub publie toujours un roman par genre chaque mois.
+                </div>
+            </>
+        )
+    },
+    settings: {
+        title: "⚙️ Votre compte RomanClub",
+        content: (
+            <>
+                <p className="welcome-text">Depuis cette section, vous pouvez gérer votre compte :</p>
+                <ul className="welcome-list">
+                    <li>modifier votre adresse email</li>
+                    <li>mettre à jour votre moyen de paiement</li>
+                    <li>consulter vos factures</li>
+                    <li>accéder à <strong>Mes livres</strong> : tous les romans commencés et lus</li>
+                </ul>
+                <p className="welcome-text">L’annulation de l’abonnement est possible à tout moment, avec effet en fin de période.</p>
+            </>
+        )
+    }
+};
 
 // =========================================
 // MOCK DATA Constants
@@ -730,6 +798,9 @@ const DashboardPage = () => {
     const [userProfile, setUserProfile] = useState({});
     const [loading, setLoading] = useState(true);
 
+    // Tutorial State
+    const [activeTutorial, setActiveTutorial] = useState(null); // 'library', 'stats', 'path', 'settings'
+
     // UI State for Deep Linking
     const [libraryDefaultSection, setLibraryDefaultSection] = useState(null);
 
@@ -781,6 +852,48 @@ const DashboardPage = () => {
         setView('library');
     };
 
+    // --- Tutorial Logic ---
+    const handleTileClick = (tileKey) => {
+        // dictionary key map for consistency with localStorage keys and TUTORIAL_CONTENT keys
+        // tileKey expected: 'library', 'stats', 'path', 'settings'
+
+        const storageKey = "tutorialsSeen";
+        let seenData = {};
+        try {
+            seenData = JSON.parse(localStorage.getItem(storageKey)) || {};
+        } catch (e) {
+            seenData = {};
+        }
+
+        if (seenData[tileKey]) {
+            // Already seen -> Navigate directly
+            setView(tileKey);
+        } else {
+            // Not seen -> Show Tutorial
+            setActiveTutorial(tileKey);
+        }
+    };
+
+    const handleCloseTutorial = () => {
+        if (!activeTutorial) return;
+
+        // Save to LocalStorage
+        const storageKey = "tutorialsSeen";
+        let seenData = {};
+        try {
+            seenData = JSON.parse(localStorage.getItem(storageKey)) || {};
+        } catch (e) {
+            seenData = {};
+        }
+        seenData[activeTutorial] = true;
+        localStorage.setItem(storageKey, JSON.stringify(seenData));
+
+        // Navigate to the view
+        const targetView = activeTutorial;
+        setActiveTutorial(null); // Close modal
+        setView(targetView); // Go to section
+    };
+
     if (loading) {
         return (
             <div className="dashboard-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#fff' }}>
@@ -793,6 +906,16 @@ const DashboardPage = () => {
     return (
         <div className="dashboard-container">
             <WelcomeModal />
+
+            {activeTutorial && TUTORIAL_CONTENT[activeTutorial] && (
+                <TutorialModal
+                    isOpen={!!activeTutorial}
+                    onClose={handleCloseTutorial}
+                    title={TUTORIAL_CONTENT[activeTutorial].title}
+                    content={TUTORIAL_CONTENT[activeTutorial].content}
+                />
+            )}
+
             <header className="dashboard-header">
                 <div className="header-left">
                     <img src="/logo.png" alt="Logo" className="header-logo" />
@@ -808,28 +931,28 @@ const DashboardPage = () => {
                 {view === 'dashboard' ? (
                     <div className="tiles-grid fade-in">
                         {/* Orange Tile - Library */}
-                        <div className="dash-tile tile-orange" onClick={() => setView('library')}>
+                        <div className="dash-tile tile-orange" onClick={() => handleTileClick('library')}>
                             <div className="tile-icon">📚</div>
                             <h2>Ma bibliothèque</h2>
                             <p>Accéder à vos romans</p>
                         </div>
 
                         {/* Green Tile - Reading Time */}
-                        <div className="dash-tile tile-green" onClick={() => setView('stats')}>
+                        <div className="dash-tile tile-green" onClick={() => handleTileClick('stats')}>
                             <div className="tile-icon">⏱️</div>
                             <h2>Temps de lecture</h2>
                             <p className="tile-value">12 h 45 de lecture</p>
                         </div>
 
                         {/* Yellow Tile - Reading Path */}
-                        <div className="dash-tile tile-yellow" onClick={() => setView('path')}>
+                        <div className="dash-tile tile-yellow" onClick={() => handleTileClick('path')}>
                             <div className="tile-icon">🧭</div>
                             <h2>Mon parcours</h2>
                             <p>Analyse de vos goûts</p>
                         </div>
 
                         {/* Blue Tile - Settings */}
-                        <div className="dash-tile tile-blue" onClick={() => setView('settings')}>
+                        <div className="dash-tile tile-blue" onClick={() => handleTileClick('settings')}>
                             <div className="tile-icon">⚙️</div>
                             <h2>Paramètres</h2>
                             <p>Mon compte</p>
