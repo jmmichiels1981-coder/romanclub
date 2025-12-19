@@ -363,12 +363,21 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
     const userCountry = userProfile.pays || 'FR'; // 'BE', 'FR', etc.
     const showSepaOption = userCountry !== 'CA';
 
-    // Strict IBAN: No logic, just allow SEPA and empty placeholder
+    // Strict IBAN: Force placeholder to be invisible using CSS color: transparent.
+    // This is the only way to guarantee 'clean' empty look if Stripe enforces a default.
     const IBAN_ELEMENT_OPTIONS = {
         supportedCountries: ['SEPA'],
-        placeholderCountry: '',
-        placeholder: '',
-        style: BASE_CARD_STYLE
+        placeholderCountry: 'FR', // Keep a valid country for formatting logic if needed, but hide the visual text
+        style: {
+            base: {
+                fontSize: '16px',
+                color: '#fff',
+                '::placeholder': { color: 'transparent' }
+            },
+            invalid: {
+                color: '#fa755a'
+            }
+        }
     };
 
     useEffect(() => {
