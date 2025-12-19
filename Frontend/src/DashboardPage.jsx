@@ -285,7 +285,12 @@ const SettingsAccountView = ({ booksCount, onBack, onNavigateToLibrary }) => {
                 {allBooks.map((book) => (
                     <div key={book.id} className="reading-item clickable-row" onClick={() => onNavigateToLibrary(book.type)}>
                         <div className="book-info-minimal">
-                            <span className="book-title">{book.title}</span>
+                            <span
+                                className="book-title"
+                                style={{ textDecoration: 'underline', cursor: 'pointer', color: '#fff' }}
+                            >
+                                {book.title}
+                            </span>
                             <div className="book-meta-sub">
                                 <span className={`status-text-simple ${book.status === 'Terminé' ? 'done' : 'ongoing'}`}>
                                     {book.status}
@@ -334,14 +339,20 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
             base: { fontSize: '16px', color: '#fff', '::placeholder': { color: '#aab7c4' } },
             invalid: { color: '#fa755a' }
         },
+        placeholder: '', // Remove default 4242...
         disableLink: true,
         showIcon: true,
         hidePostalCode: true // Often requested to simplify
     };
 
+    // Logic for Country
+    const userCountry = userProfile.pays || 'FR'; // 'BE', 'FR', etc.
+    // If CA, no SEPA option.
+    const showSepaOption = userCountry !== 'CA';
+
     const IBAN_ELEMENT_OPTIONS = {
         supportedCountries: ['SEPA'],
-        placeholderCountry: 'FR', // Default to FR, but auto-detects
+        placeholderCountry: userCountry, // Ensure example matches user country (BE, FR...)
         style: {
             base: { fontSize: '16px', color: '#fff', '::placeholder': { color: '#aab7c4' } },
             invalid: { color: '#fa755a' }
@@ -610,10 +621,12 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                                     className={newPaymentType === 'card' ? 'active' : ''}
                                     onClick={() => setNewPaymentType('card')}
                                 >Carte</span>
-                                <span
-                                    className={newPaymentType === 'sepa' ? 'active' : ''}
-                                    onClick={() => setNewPaymentType('sepa')}
-                                >SEPA</span>
+                                {showSepaOption && (
+                                    <span
+                                        className={newPaymentType === 'sepa' ? 'active' : ''}
+                                        onClick={() => setNewPaymentType('sepa')}
+                                    >SEPA</span>
+                                )}
                             </div>
 
                             <div className="payment-element-box" style={{ marginBottom: '1rem' }}>
