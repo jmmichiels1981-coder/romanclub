@@ -363,20 +363,11 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
     const userCountry = userProfile.pays || 'FR'; // 'BE', 'FR', etc.
     const showSepaOption = userCountry !== 'CA';
 
-    // Strict IBAN Placeholder Mapping
-    const getIbanPlaceholder = (country) => {
-        switch (country) {
-            case 'BE': return 'BE00 0000 0000 0000';
-            case 'LU': return 'LU00 0000 0000 0000';
-            case 'CH': return 'CH00 0000 0000 0000';
-            case 'FR': default: return 'FR00 0000 0000 0000 0000 0000';
-        }
-    };
-
+    // Strict IBAN: No logic, just allow SEPA and empty placeholder
     const IBAN_ELEMENT_OPTIONS = {
         supportedCountries: ['SEPA'],
-        placeholderCountry: userCountry,
-        placeholder: getIbanPlaceholder(userCountry), // Manual override to ensure strict example
+        placeholderCountry: '',
+        placeholder: '',
         style: BASE_CARD_STYLE
     };
 
@@ -653,7 +644,7 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                                         <div className="row-2">
                                             <div><label>Expiration</label><div className="stripe-input"><CardExpiryElement options={CARD_EXP_OPTIONS} /></div></div>
                                             <div>
-                                                {/* No Label for CVC per user request, just the field */}
+                                                <label>CVC</label>
                                                 <div className="stripe-input"><CardCvcElement options={CARD_CVC_OPTIONS} /></div>
                                             </div>
                                         </div>
