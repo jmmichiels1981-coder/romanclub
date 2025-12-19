@@ -47,61 +47,65 @@ const LibraryView = () => (
     <div className="dashboard-detail-view fade-in">
         <h2 className="view-title">Ma Bibliothèque</h2>
 
-        {/* 1. New Books */}
-        <section className="lib-section">
-            <h3>Nouveautés de la semaine</h3>
-            {MOCK_NEW_BOOKS.map(book => (
-                <div key={book.id} className="book-card">
-                    <div className="book-info">
-                        <h4>{book.title} <span className="genre-tag">{book.genre}</span></h4>
-                        <p className="author">de {book.author}</p>
-                        <p className="summary">{book.summary}</p>
-                    </div>
-                    <div className="book-actions">
-                        <button className="btn-action">Commencer</button>
-                    </div>
-                </div>
-            ))}
-        </section>
-
-        {/* 2. Ongoing */}
-        <section className="lib-section">
-            <h3>En cours de lecture</h3>
-            {MOCK_CURRENT_BOOKS.map(book => (
-                <div key={book.id} className="book-card">
-                    <div className="book-info">
-                        <h4>{book.title}</h4>
-                        <div className="progress-container">
-                            <div className="progress-bar-bg">
-                                <div className="progress-bar-fill" style={{ width: `${book.progress}%` }}></div>
-                            </div>
-                            <span className="status-text">{book.progress}% lu</span>
+        <div className="lib-grid">
+            {/* 1. New Books (Orange Tile) */}
+            <div className="content-tile tile-orange">
+                <h3>Nouveautés de la semaine</h3>
+                {MOCK_NEW_BOOKS.map(book => (
+                    <div key={book.id} className="book-card">
+                        <div className="book-info">
+                            <h4>{book.title} <span className="genre-tag">{book.genre}</span></h4>
+                            <p className="author">de {book.author}</p>
+                            <p className="summary">{book.summary}</p>
+                        </div>
+                        <div className="book-actions">
+                            <button className="btn-action">Commencer</button>
                         </div>
                     </div>
-                    <div className="book-actions">
-                        <button className="btn-action">Reprendre</button>
-                        <button className="btn-secondary">Résumé IA</button>
-                    </div>
-                </div>
-            ))}
-        </section>
+                ))}
+            </div>
 
-        {/* 3. Finished */}
-        <section className="lib-section">
-            <h3>Romans lus</h3>
-            {MOCK_READ_BOOKS.map(book => (
-                <div key={book.id} className="book-card">
-                    <div className="book-info">
-                        <h4>{book.title}</h4>
-                        <p className="author">Lu le {book.finishedDate}</p>
+            {/* 2. Ongoing (Green Tile) */}
+            <div className="content-tile tile-green">
+                <h3>En cours de lecture</h3>
+                {MOCK_CURRENT_BOOKS.map(book => (
+                    <div key={book.id} className="book-card">
+                        <div className="book-info">
+                            <h4>{book.title}</h4>
+                            <div className="progress-container">
+                                <div className="progress-bar-bg">
+                                    <div className="progress-bar-fill" style={{ width: `${book.progress}%` }}></div>
+                                </div>
+                                <span className="status-text">{book.progress}% lu</span>
+                            </div>
+                        </div>
+                        <div className="book-actions">
+                            <button className="btn-action">Reprendre</button>
+                            <button className="btn-secondary">Résumé IA</button>
+                        </div>
                     </div>
-                    <div className="book-actions">
-                        <button className="btn-secondary">Relire</button>
-                        <button className="btn-secondary">Résumé IA</button>
+                ))}
+            </div>
+
+            {/* 3. Finished (Yellow/Blue Tile) -> Using Blue for consistency with Settings or Yellow for path */}
+            {/* User asked for Style of dashboard. Dashboard has Orange/Green/Yellow/Blue.
+                I'll use Blue for 'Lus' (read) to distinguish from Green (reading). */}
+            <div className="content-tile tile-blue">
+                <h3>Romans lus</h3>
+                {MOCK_READ_BOOKS.map(book => (
+                    <div key={book.id} className="book-card">
+                        <div className="book-info">
+                            <h4>{book.title}</h4>
+                            <p className="author">Lu le {book.finishedDate}</p>
+                        </div>
+                        <div className="book-actions">
+                            <button className="btn-secondary">Relire</button>
+                            <button className="btn-secondary">Résumé IA</button>
+                        </div>
                     </div>
-                </div>
-            ))}
-        </section>
+                ))}
+            </div>
+        </div>
     </div>
 );
 

@@ -130,12 +130,38 @@
     margin-top: 0.5rem;
 }
 
+/* New Content Tile (Non-clickable container style) */
+.content-tile {
+    background-color: #1a1a1d;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: box-shadow 0.2s;
+}
+
+.content-tile:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.content-tile h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #333;
+}
+
+
 /* Tile Colors */
 .tile-orange {
     border-top: 4px solid #ff7700;
 }
 
-.tile-orange h2 {
+.tile-orange h2,
+.tile-orange h3 {
     color: #ff7700;
 }
 
@@ -144,7 +170,8 @@
 }
 
 .tile-green h2,
-.tile-green .tile-value {
+.tile-green .tile-value,
+.tile-green h3 {
     color: #4caf50;
 }
 
@@ -152,7 +179,8 @@
     border-top: 4px solid #ffca28;
 }
 
-.tile-yellow h2 {
+.tile-yellow h2,
+.tile-yellow h3 {
     color: #ffca28;
 }
 
@@ -160,7 +188,8 @@
     border-top: 4px solid #2196f3;
 }
 
-.tile-blue h2 {
+.tile-blue h2,
+.tile-blue h3 {
     color: #2196f3;
 }
 
@@ -190,32 +219,27 @@
 }
 
 /* Sections */
-.lib-section,
-.path-section {
-    margin-bottom: 3rem;
-}
-
-.lib-section h3,
-.path-section h3 {
-    font-size: 1.2rem;
-    color: #fff;
-    margin-bottom: 1rem;
-    border-left: 3px solid #666;
-    padding-left: 0.8rem;
+.lib-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
 }
 
 /* Cards */
 .book-card {
-    background: #1a1a1d;
+    background: #222;
+    /* Slightly lighter than tile bg */
     border: 1px solid #333;
     border-radius: 8px;
-    padding: 1.5rem;
+    padding: 1rem;
     margin-bottom: 1rem;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.book-card:last-child {
+    margin-bottom: 0;
 }
 
 .book-info h4 {
@@ -234,7 +258,6 @@
     color: #888;
     font-size: 0.85rem;
     margin: 0.5rem 0 0 0;
-    max-width: 600px;
     line-height: 1.4;
 }
 
@@ -257,6 +280,8 @@
     cursor: pointer;
     font-weight: bold;
     transition: background 0.2s;
+    width: 100%;
+    /* Full width in cards inside tiles */
 }
 
 .btn-action:hover {
@@ -270,8 +295,8 @@
     padding: 0.5rem 1rem;
     border-radius: 4px;
     cursor: pointer;
-    margin-right: 0.5rem;
     transition: background 0.2s;
+    flex: 1;
 }
 
 .btn-secondary:hover {
@@ -282,11 +307,12 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    width: 100%;
 }
 
 /* Progress Bar */
 .progress-container {
-    width: 200px;
+    width: 100%;
     margin-top: 0.5rem;
 }
 
