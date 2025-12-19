@@ -8,29 +8,157 @@ import './dashboard.css';
 // SUB-COMPONENTS (Views)
 // =========================================
 
+// =========================================
+// MOCK DATA Constants
+// =========================================
+
+const MOCK_NEW_BOOKS = [
+    { id: 1, title: "L'Ombre du Silence", author: "Marc Levy", genre: "Polar", summary: "Une enquête palpitante au cœur des secrets d'État." },
+    { id: 2, title: "Amour et Algorithmes", author: "Sophie D.", genre: "Romance", summary: "Quand l'IA décide de trouver l'âme sœur." }
+];
+
+const MOCK_CURRENT_BOOKS = [
+    { id: 3, title: "Les Étoiles Oubliées", author: "Isaac A.", progress: 45 },
+    { id: 4, title: "Le Sourire du Boulanger", author: "Camille P.", progress: 12 }
+];
+
+const MOCK_READ_BOOKS = [
+    { id: 5, title: "Crimson Rivers", author: "Jean-C. G.", finishedDate: "12/11/2024" }
+];
+
+const MOCK_READING_TIME_DETAILS = [
+    { title: "Les Étoiles Oubliées", status: "En cours", time: "5 h 30", isDone: false },
+    { title: "Le Sourire du Boulanger", status: "En cours", time: "1 h 15", isDone: false },
+    { title: "Crimson Rivers", status: "Terminé", time: "6 h 00", isDone: true }
+];
+
+const MOCK_GENRE_STATS = [
+    { genre: "Polar / Thriller", percentage: 45 },
+    { genre: "Science-Fiction", percentage: 30 },
+    { genre: "Romance", percentage: 15 },
+    { genre: "Feel-Good", percentage: 10 }
+];
+
+// =========================================
+// SUB-COMPONENTS (Views)
+// =========================================
+
 const LibraryView = () => (
     <div className="dashboard-detail-view fade-in">
         <h2 className="view-title">Ma Bibliothèque</h2>
-        <div className="empty-state">
-            <p>Votre bibliothèque se remplira au fil de vos lectures.</p>
-        </div>
+
+        {/* 1. New Books */}
+        <section className="lib-section">
+            <h3>Nouveautés de la semaine</h3>
+            {MOCK_NEW_BOOKS.map(book => (
+                <div key={book.id} className="book-card">
+                    <div className="book-info">
+                        <h4>{book.title} <span className="genre-tag">{book.genre}</span></h4>
+                        <p className="author">de {book.author}</p>
+                        <p className="summary">{book.summary}</p>
+                    </div>
+                    <div className="book-actions">
+                        <button className="btn-action">Commencer</button>
+                    </div>
+                </div>
+            ))}
+        </section>
+
+        {/* 2. Ongoing */}
+        <section className="lib-section">
+            <h3>En cours de lecture</h3>
+            {MOCK_CURRENT_BOOKS.map(book => (
+                <div key={book.id} className="book-card">
+                    <div className="book-info">
+                        <h4>{book.title}</h4>
+                        <div className="progress-container">
+                            <div className="progress-bar-bg">
+                                <div className="progress-bar-fill" style={{ width: `${book.progress}%` }}></div>
+                            </div>
+                            <span className="status-text">{book.progress}% lu</span>
+                        </div>
+                    </div>
+                    <div className="book-actions">
+                        <button className="btn-action">Reprendre</button>
+                        <button className="btn-secondary">Résumé IA</button>
+                    </div>
+                </div>
+            ))}
+        </section>
+
+        {/* 3. Finished */}
+        <section className="lib-section">
+            <h3>Romans lus</h3>
+            {MOCK_READ_BOOKS.map(book => (
+                <div key={book.id} className="book-card">
+                    <div className="book-info">
+                        <h4>{book.title}</h4>
+                        <p className="author">Lu le {book.finishedDate}</p>
+                    </div>
+                    <div className="book-actions">
+                        <button className="btn-secondary">Relire</button>
+                        <button className="btn-secondary">Résumé IA</button>
+                    </div>
+                </div>
+            ))}
+        </section>
     </div>
 );
 
 const ReadingTimeView = () => (
     <div className="dashboard-detail-view fade-in">
         <h2 className="view-title" style={{ color: '#4caf50' }}>Temps de lecture</h2>
+
         <div className="stat-highlight">
             <p>Vous avez lu <strong>12 h 45</strong> sur RomanClub</p>
+            <p className="sub-stat">Moyenne : 45 min / jour</p>
         </div>
+
+        <section className="reading-list">
+            <h3 style={{ color: '#ccc', marginBottom: '1rem', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>Détail par livre</h3>
+            {MOCK_READING_TIME_DETAILS.map((item, idx) => (
+                <div key={idx} className="reading-item">
+                    <div>
+                        <span className={`status-pill ${item.isDone ? 'done' : 'ongoing'}`}>
+                            {item.status}
+                        </span>
+                        <span className="book-title">{item.title}</span>
+                    </div>
+                    <span className="time-spent">{item.time}</span>
+                </div>
+            ))}
+        </section>
     </div>
 );
 
 const ReadingPathView = () => (
     <div className="dashboard-detail-view fade-in">
         <h2 className="view-title" style={{ color: '#ffca28' }}>Mon parcours de lecture</h2>
+
         <div className="path-section">
-            <p>L'analyse de vos goûts s'affinera avec le temps.</p>
+            <h3>Vos genres de prédilection</h3>
+            <ul className="genres-list">
+                {MOCK_GENRE_STATS.map((stat, idx) => (
+                    <li key={idx} className="dist-item">
+                        <div className="dist-header">
+                            <span>{stat.genre}</span>
+                            <span>{stat.percentage} %</span>
+                        </div>
+                        <div className="dist-bar-bg">
+                            <div className="dist-bar-fill" style={{ width: `${stat.percentage}%`, backgroundColor: idx === 0 ? '#ffca28' : '#666' }}></div>
+                        </div>
+                    </li>
+                ))}
+            </ul>
+        </div>
+
+        <div className="editorial-box">
+            <p>
+                <strong>Analyse éditoriale :</strong><br />
+                Votre parcours montre une nette préférence pour les intrigues complexes et le suspense (Polar).
+                Cependant, votre intérêt récent pour la Science-Fiction suggère une curiosité pour les univers dystopiques.
+                Nous vous recommanderons davantage d'œuvres croisant ces deux thématiques le mois prochain.
+            </p>
         </div>
     </div>
 );

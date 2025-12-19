@@ -235,6 +235,17 @@
     font-size: 0.85rem;
     margin: 0.5rem 0 0 0;
     max-width: 600px;
+    line-height: 1.4;
+}
+
+.book-info .genre-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #333;
+    color: #ccc;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-left: 10px;
 }
 
 .btn-action {
@@ -245,16 +256,26 @@
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
+    transition: background 0.2s;
+}
+
+.btn-action:hover {
+    background-color: #e66a00;
 }
 
 .btn-secondary {
     background-color: #333;
     color: #fff;
-    border: none;
+    border: 1px solid #444;
     padding: 0.5rem 1rem;
     border-radius: 4px;
     cursor: pointer;
     margin-right: 0.5rem;
+    transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: #444;
 }
 
 .book-actions {
@@ -263,27 +284,21 @@
     gap: 0.5rem;
 }
 
-.checkbox-container {
-    margin-left: 1rem;
-    font-size: 0.9rem;
-    color: #aaa;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
+/* Progress Bar */
+.progress-container {
+    width: 200px;
+    margin-top: 0.5rem;
 }
 
-/* Progress Bar */
-.progress-bar-container {
+.progress-bar-bg {
     background-color: #333;
     height: 6px;
     border-radius: 3px;
-    width: 200px;
-    margin: 0.5rem 0;
+    width: 100%;
     overflow: hidden;
 }
 
-.progress-bar {
+.progress-bar-fill {
     background-color: #ff7700;
     height: 100%;
 }
@@ -291,6 +306,8 @@
 .status-text {
     font-size: 0.8rem;
     color: #888;
+    display: block;
+    margin-top: 4px;
 }
 
 /* Stats */
@@ -309,23 +326,37 @@
     font-size: 1.5rem;
 }
 
-.sub-stat {
-    font-size: 1rem;
-    color: #aaa;
-    margin-top: 0.5rem;
+.reading-list {
+    margin-top: 2rem;
 }
 
-.stat-item {
+.reading-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 1rem;
+    background: #1a1a1d;
     border-bottom: 1px solid #333;
+}
+
+.reading-item:last-child {
+    border-bottom: none;
+}
+
+.reading-item .book-title {
+    font-weight: bold;
+    color: #fff;
+}
+
+.reading-item .time-spent {
+    color: #aaa;
+    font-family: monospace;
 }
 
 .status-pill {
     padding: 0.2rem 0.6rem;
     border-radius: 12px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     margin-right: 1rem;
 }
 
@@ -343,12 +374,7 @@
 .genres-list {
     list-style: none;
     padding: 0;
-}
-
-.genres-list li {
-    padding: 0.5rem 0;
-    color: #ddd;
-    border-bottom: 1px solid #222;
+    margin-bottom: 2rem;
 }
 
 .dist-item {
@@ -358,31 +384,32 @@
 .dist-header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.5rem;
     font-size: 0.9rem;
     color: #ccc;
+    font-weight: 500;
 }
 
 .dist-bar-bg {
-    height: 4px;
+    height: 8px;
     background: #333;
     width: 100%;
-    border-radius: 2px;
+    border-radius: 4px;
 }
 
 .dist-bar-fill {
     height: 100%;
     background: #ffca28;
-    border-radius: 2px;
+    border-radius: 4px;
 }
 
-.ai-analysis {
-    font-style: italic;
+.editorial-box {
     color: #bbb;
-    background: #252525;
+    background: #222;
     padding: 1.5rem;
     border-radius: 8px;
     border-left: 4px solid #ffca28;
+    line-height: 1.6;
 }
 
 /* Settings Styles Refined */
@@ -477,7 +504,6 @@
     border-radius: 4px;
     font-size: 0.9rem;
     margin-top: -15px;
-    /* Pull closer to above element */
     margin-bottom: 15px;
 }
 
@@ -561,10 +587,6 @@
 .settings-nav-btn span {
     font-weight: bold;
     font-size: 1.1rem;
-}
-
-.arrows {
-    color: #666;
 }
 
 /* Invoice Table in specific view */
