@@ -50,6 +50,19 @@ function LoginPage() {
             alert("Erreur de connexion au serveur.");
             setIsLoading(false);
         }
+    };
+
+    return (
+        <div className="login-container">
+            <div className="login-header">
+                <img src="/logo.png" alt="RomanClub Logo" className="login-logo" />
+                <h1 className="brand-title">ROMAN CLUB</h1>
+                <p className="page-subtitle">CONNEXION</p>
+            </div>
+
+            <div className="login-card">
+                <form onSubmit={handleLogin} style={{ width: '100%' }}>
+                    <div className="input-group">
                         <label className="input-label">Email</label>
                         <input
                             type="email"
@@ -94,23 +107,23 @@ function LoginPage() {
                     </button>
                 </form >
 
-        <div className="helper-links">
-            <div>
-                <Link to="/forgot-password" className="orange-link">Mot de passe oublié ?</Link>
-                <span style={{ margin: "0 0.5rem", color: "#444" }}>|</span>
-                <Link to="/forgot-pin" className="orange-link">Code PIN oublié ?</Link>
-            </div>
+                <div className="helper-links">
+                    <div>
+                        <Link to="/forgot-password" className="orange-link">Mot de passe oublié ?</Link>
+                        <span style={{ margin: "0 0.5rem", color: "#444" }}>|</span>
+                        <Link to="/forgot-pin" className="orange-link">Code PIN oublié ?</Link>
+                    </div>
 
-            <div className="create-account-link">
-                Pas encore de compte ? <Link to="/inscription" className="orange-link">Créer un compte</Link>
-            </div>
+                    <div className="create-account-link">
+                        Pas encore de compte ? <Link to="/inscription" className="orange-link">Créer un compte</Link>
+                    </div>
 
-            <div className="footer-links">
-                <Link to="/">← Retour à l'accueil</Link>
-                <span style={{ color: "#444" }}>|</span>
-                <Link to="/mentions">Mentions légales</Link>
-            </div>
-        </div>
+                    <div className="footer-links">
+                        <Link to="/">← Retour à l'accueil</Link>
+                        <span style={{ color: "#444" }}>|</span>
+                        <Link to="/mentions">Mentions légales</Link>
+                    </div>
+                </div>
             </div >
         </div >
     );
