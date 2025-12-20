@@ -898,8 +898,9 @@ app.use(express.static(frontendPath));
 // Anything else that doesn't match an API route is sent to the React frontend.
 // This allows the SPA to handle routing (e.g., /dashboard, /connexion) after refresh.
 // This allows the SPA to handle routing (e.g., /dashboard, /connexion) after refresh.
-// Modified to "/*" for Render/newer Express compatibility (fixes PathError: Missing parameter name at index 1: *)
-app.get("/*", (req, res) => {
+// Modified to use a global middleware "app.use" which catches everything not handled above.
+// This effectively bypasses "path-to-regexp" string matching errors on Render.
+app.use((req, res) => {
   console.log(`⚠️ Route not found in API, serving index.html for: ${req.url}`);
   // Use path.resolve to be absolutely sure of the path relative to this file
   res.sendFile(path.resolve(__dirname, "../Frontend/dist/index.html"), (err) => {
