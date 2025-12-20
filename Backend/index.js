@@ -73,6 +73,119 @@ const requireAuth = async (req, res, next) => {
   }
 };
 
+const requireAdmin = async (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: "Access denied: Admins only" });
+  }
+  next();
+};
+
+// =======================
+// ADMIN ENDPOINTS (BOOKS)
+// =======================
+
+// 1. GET /admin/books - List all books
+app.get("/admin/books", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const books = await booksCollection.find({})
+      .sort({ publishedAt: -1 })
+      .toArray();
+    res.json(books);
+  } catch (error) {
+    console.error("Admin GET books error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 2. POST /admin/books - Create Book
+app.post("/admin/books", requireAuth, requireAdmin, async (req, res) => {
+  const { title, author, genre, editorialSummary, contentUrl, publishedAt, isPublished } = req.body;
+
+  // Strict Validation
+  if (!title || typeof title !== 'string') return res.status(400).json({ error: "Titre obligatoire (string)" });
+  if (!author || typeof author !== 'string') return res.status(400).json({ error: "Auteur obligatoire (string)" });
+
+  const validGenres = ["polar", "romance", "science-fiction", "feel-good"];
+  if (!genre || !validGenres.includes(genre)) return res.status(400).json({ error: "Genre invalide (polar, romance, science-fiction, feel-good)" });
+
+  if (!editorialSummary || typeof editorialSummary !== 'string') return res.status(400).json({ error: "Résumé éditorial obligatoire" });
+  if (!contentUrl || typeof contentUrl !== 'string') return res.status(400).json({ error: "URL de contenu obligatoire" });
+  if (!publishedAt) return res.status(400).json({ error: "Date de publication obligatoire" });
+
+  try {
+    const newBook = {
+      title,
+      author,
+      genre,
+      editorialSummary,
+      contentUrl,
+      publishedAt: new Date(publishedAt),
+      isPublished: Boolean(isPublished),
+      createdAt: new Date()
+    };
+
+    const result = await booksCollection.insertOne(newBook);
+    newBook._id = result.insertedId;
+    res.json({ success: true, book: newBook });
+  } catch (error) {
+    console.error("Admin CREATE book error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 3. PUT /admin/books/:id - Update Book
+app.put("/admin/books/:id", requireAuth, requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { title, author, genre, editorialSummary, contentUrl, publishedAt, isPublished } = req.body;
+
+  // Strict Validation for Update
+  if (!title || typeof title !== 'string') return res.status(400).json({ error: "Titre obligatoire (string)" });
+  if (!author || typeof author !== 'string') return res.status(400).json({ error: "Auteur obligatoire (string)" });
+
+  const validGenres = ["polar", "romance", "science-fiction", "feel-good"];
+  if (!genre || !validGenres.includes(genre)) return res.status(400).json({ error: "Genre invalide" });
+
+  if (!editorialSummary || typeof editorialSummary !== 'string') return res.status(400).json({ error: "Résumé éditorial obligatoire" });
+  if (!contentUrl || typeof contentUrl !== 'string') return res.status(400).json({ error: "URL de contenu obligatoire" });
+  if (!publishedAt) return res.status(400).json({ error: "Date de publication obligatoire" });
+
+  try {
+    const updateDoc = {
+      $set: {
+        title,
+        author,
+        genre,
+        editorialSummary,
+        contentUrl,
+        publishedAt: new Date(publishedAt),
+        isPublished: Boolean(isPublished),
+        updatedAt: new Date()
+      }
+    };
+
+    const result = await booksCollection.updateOne({ _id: new ObjectId(id) }, updateDoc);
+    if (result.matchedCount === 0) return res.status(404).json({ error: "Livre non trouvé" });
+
+    res.json({ success: true, message: "Livre mis à jour" });
+  } catch (error) {
+    console.error("Admin UPDATE book error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 4. GET /admin/books/:id - Details
+app.get("/admin/books/:id", requireAuth, requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const book = await booksCollection.findOne({ _id: new ObjectId(id) });
+    if (!book) return res.status(404).json({ error: "Livre non trouvé" });
+    res.json(book);
+  } catch (error) {
+    console.error("Admin GET book detail error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 let booksCollection;
 let userBooksCollection;
 
