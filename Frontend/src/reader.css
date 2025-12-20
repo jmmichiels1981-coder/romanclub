@@ -18,6 +18,31 @@
     font-family: Georgia, "Times New Roman", serif;
 }
 
+/* Bouton Retour Sticky */
+.reader-back-btn {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 1rem;
+    z-index: 100;
+
+    /* Style visuel */
+    background: rgba(14, 14, 14, 0.95);
+    border: 1px solid #333;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    backdrop-filter: blur(4px);
+    margin-bottom: 2rem;
+    display: inline-block;
+    transition: background 0.3s;
+}
+
+.reader-back-btn:hover {
+    background: #333;
+}
+
 .reader-content h2 {
     text-align: center;
     margin-bottom: 2rem;

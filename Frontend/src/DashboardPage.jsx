@@ -366,19 +366,50 @@ const SettingsAccountView = ({ booksCount, onBack, onNavigateToLibrary, authToke
     useEffect(() => {
         if (!authToken) return;
         const fetchAll = async () => {
-            const [resRead, resComp] = await Promise.all([
+            const [resRead, resComp, resNew] = await Promise.all([
                 fetch(`${API_URL}/library/reading`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
-                fetch(`${API_URL}/library/completed`, { headers: { 'Authorization': `Bearer ${authToken}` } })
+                fetch(`${API_URL}/library/completed`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
+                fetch(`${API_URL}/library/weekly`, { headers: { 'Authorization': `Bearer ${authToken}` } })
             ]);
             const dataRead = await resRead.json();
             const dataComp = await resComp.json();
+            const dataNew = await resNew.json();
 
+            // Filter out new books that are already in reading or completed to avoid duplicates if backend doesn't handle it
+            // Assuming backend lists are distinct for simplicty, or we just show them.
+            // But usually 'weekly' are all available. 'reading' are subset of started.
+            // Let's just merge all.
             const merged = [
+                ...(dataNew.items || []).map(b => ({ ...b, status: 'Nouveau', type: 'new' })),
                 ...(dataRead.items || []).map(b => ({ ...b, status: 'En cours', type: 'ongoing' })),
                 ...(dataComp.items || []).map(b => ({ ...b, status: 'Terminé', type: 'read' }))
             ];
-            // Sort by activity/completion? The API already sorts by date. Just concat or re-sort.
-            setAllBooks(merged);
+
+            // Deduplicate by bookId (prefer 'En cours'/'Terminé' over 'Nouveau')
+            const uniqueBooks = [];
+            const map = new Map();
+            for (const item of merged) {
+                if (!map.has(item.bookId)) {
+                    map.set(item.bookId, true);
+                    uniqueBooks.push(item);
+                } else {
+                    // Start/Finish status overwrites 'Nouveau' ?
+                    // Since we added 'new' first, subsequent 'ongoing' should overwrite? 
+                    // No, Map prevents overwrite.
+                    // Let's reverse order: Completed, Reading, New.
+                }
+            }
+
+            // Better approach:
+            // 1. Create map from New
+            // 2. Overwrite with Reading
+            // 3. Overwrite with Completed
+            const bookMap = new Map();
+            (dataNew.items || []).forEach(b => bookMap.set(b.bookId, { ...b, status: 'À découvrir', type: 'new' }));
+            (dataRead.items || []).forEach(b => bookMap.set(b.bookId, { ...b, status: 'En cours', type: 'ongoing' }));
+            (dataComp.items || []).forEach(b => bookMap.set(b.bookId, { ...b, status: 'Terminé', type: 'read' }));
+
+            setAllBooks(Array.from(bookMap.values()));
         };
         fetchAll();
     }, [authToken]);
