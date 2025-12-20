@@ -40,15 +40,11 @@ function RegisterPage() {
         dateNaissance: "",
         sexe: "", // "Homme" or "Femme"
         pays: "France",
-        password: "",
-        confirmPassword: "",
         pin: "",
         confirmPin: ""
     });
 
     const [visibleFields, setVisibleFields] = useState({
-        password: false,
-        confirmPassword: false,
         pin: false,
         confirmPin: false
     });
@@ -75,10 +71,7 @@ function RegisterPage() {
             alert("Veuillez sélectionner votre sexe.");
             return;
         }
-        if (formData.password !== formData.confirmPassword) {
-            alert("Les mots de passe ne correspondent pas.");
-            return;
-        }
+
         if (formData.pin !== formData.confirmPin) {
             alert("Les codes PIN ne correspondent pas.");
             return;
@@ -440,91 +433,7 @@ function RegisterPage() {
                         </select>
                     </div>
 
-                    <div className="input-group" style={{ marginTop: '1rem' }}>
-                        <label className="input-label">Mot de passe</label>
-                        <div style={{ position: 'relative' }}>
-                            <input
-                                type={visibleFields.password ? "text" : "password"}
-                                name="password"
-                                className="login-input"
-                                placeholder="Créez votre mot de passe"
-                                required
-                                value={formData.password}
-                                onChange={handleChange}
-                                style={{ paddingRight: '40px' }}
-                            />
-                            <span
-                                onClick={() => toggleVisibility('password')}
-                                style={{
-                                    position: 'absolute',
-                                    right: '10px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    cursor: 'pointer',
-                                    color: '#aab7c4',
-                                    fontSize: '1.2rem',
-                                    display: 'flex',
-                                    alignItems: 'center'
-                                }}
-                            >
-                                {visibleFields.password ? (
-                                    /* Open Eye (Click to Hide) */
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                ) : (
-                                    /* Crossed Eye (Click to Show) - as requested "oeil avec une barre" */
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                                    </svg>
-                                )}
-                            </span>
-                        </div>
-                    </div>
 
-                    <div className="input-group" style={{ marginTop: '1rem' }}>
-                        <label className="input-label">Répéter mot de passe</label>
-                        <div style={{ position: 'relative' }}>
-                            <input
-                                type={visibleFields.confirmPassword ? "text" : "password"}
-                                name="confirmPassword"
-                                className="login-input"
-                                placeholder="Confirmez votre mot de passe"
-                                required
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                style={{ paddingRight: '40px' }}
-                            />
-                            <span
-                                onClick={() => toggleVisibility('confirmPassword')}
-                                style={{
-                                    position: 'absolute',
-                                    right: '10px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    cursor: 'pointer',
-                                    color: '#aab7c4',
-                                    fontSize: '1.2rem',
-                                    display: 'flex',
-                                    alignItems: 'center'
-                                }}
-                            >
-                                {visibleFields.confirmPassword ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                                    </svg>
-                                )}
-                            </span>
-                        </div>
-                    </div>
 
                     <div className="input-group" style={{ marginTop: '1rem' }}>
                         <label className="input-label">Code PIN (4 chiffres)</label>

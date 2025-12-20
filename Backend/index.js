@@ -710,7 +710,6 @@ app.post("/register", async (req, res) => {
       ...userData,
       pinHash, // Store hash only
       pin: undefined,
-      password: undefined,
       paymentMethodId: undefined, // Don't verify/store raw if not needed, we have stripe IDs now
       createdAt: new Date(),
       role: "user",

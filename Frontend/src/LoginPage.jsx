@@ -7,7 +7,6 @@ function LoginPage() {
     const navigate = useNavigate();
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-    const [password, setPassword] = useState("");
     const [pin, setPin] = useState("");
 
     const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +27,7 @@ function LoginPage() {
             const response = await fetch(`${API_URL}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password, pin })
+                body: JSON.stringify({ email, pin })
             });
 
             const data = await response.json();
@@ -75,18 +74,7 @@ function LoginPage() {
                         />
                     </div >
 
-                    <div className="input-group" style={{ marginTop: '1rem' }}>
-                        <label className="input-label">Mot de passe</label>
-                        <input
-                            type="password"
-                            placeholder="......."
-                            className="login-input"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            disabled={isLoading}
-                        />
-                    </div>
+
 
                     <div className="input-group" style={{ marginTop: '1rem' }}>
                         <label className="input-label">Code PIN [4 chiffres]</label>
@@ -109,8 +97,6 @@ function LoginPage() {
 
                 <div className="helper-links">
                     <div>
-                        <Link to="/forgot-password" className="orange-link">Mot de passe oublié ?</Link>
-                        <span style={{ margin: "0 0.5rem", color: "#444" }}>|</span>
                         <Link to="/forgot-pin" className="orange-link">Code PIN oublié ?</Link>
                     </div>
 
