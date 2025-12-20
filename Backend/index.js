@@ -750,8 +750,6 @@ app.post("/register", async (req, res) => {
     const newUser = {
       ...userData,
       pinHash, // Store hash only
-      pin: undefined,
-      paymentMethodId: undefined, // Don't verify/store raw if not needed, we have stripe IDs now
       createdAt: new Date(),
       role: "user",
 
@@ -766,6 +764,13 @@ app.post("/register", async (req, res) => {
       failedLoginAttempts: 0,
       welcomeSeen: false // Init logic for welcome modal
     };
+
+    // Remove sensitive fields explicitly
+    delete newUser.pin;
+    delete newUser.confirmPin;
+    delete newUser.password;
+    delete newUser.confirmPassword;
+    delete newUser.paymentMethodId;
 
     const result = await usersCollection.insertOne(newUser);
     newUser._id = result.insertedId;
