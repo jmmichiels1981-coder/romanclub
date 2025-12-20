@@ -63,7 +63,7 @@ const AdminLoginPage = () => {
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                 {/* Logo Image */}
                 {/* Override with img tag if needed */}
-                <img src="/logo.png" alt="Logo" style={{ width: '60px', marginBottom: '1rem' }} />
+                <img src="/logo.png" alt="Logo" style={{ width: '160px', marginBottom: '1rem' }} />
 
                 <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Console Admin</h1>
                 <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>RomanClub - Panneau d'administration</p>
