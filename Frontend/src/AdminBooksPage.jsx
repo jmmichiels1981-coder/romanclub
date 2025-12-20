@@ -163,47 +163,59 @@ const AdminBooksPage = () => {
                     {isLoading ? (
                         <p style={{ color: '#fff', textAlign: 'center' }}>Chargement...</p>
                     ) : (
-                        <div className="books-table-container">
-                            <table className="admin-table">
-                                <thead>
-                                    <tr>
-                                        <th>Statut</th>
-                                        <th>Titre</th>
-                                        <th>Auteur</th>
-                                        <th>Genre</th>
-                                        <th>Date Publ.</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {books.map(book => (
-                                        <tr key={book._id}>
-                                            <td>
-                                                <span
-                                                    className={`status-pill ${book.isPublished ? 'published' : 'draft'}`}
-                                                    onClick={() => handleTogglePublish(book)}
-                                                    style={{ cursor: 'pointer' }}
-                                                    title="Cliquer pour changer le statut"
-                                                >
-                                                    {book.isPublished ? 'Publié' : 'Non publié'}
-                                                </span>
-                                            </td>
-                                            <td>{book.title}</td>
-                                            <td>{book.author}</td>
-                                            <td>{book.genre}</td>
-                                            <td>{book.publishedAt ? new Date(book.publishedAt).toLocaleDateString() : '-'}</td>
-                                            <td>
-                                                <button className="btn-icon" onClick={() => handleOpenModal(book)}>✏️</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {books.length === 0 && (
+                        <div className="admin-card">
+                            <div className="books-table-container">
+                                <table className="admin-table">
+                                    <thead>
                                         <tr>
-                                            <td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>Aucun roman trouvé.</td>
+                                            <th>Statut</th>
+                                            <th>Titre</th>
+                                            <th>Auteur</th>
+                                            <th>Genre</th>
+                                            <th>Date Publ.</th>
+                                            <th>Actions</th>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {books.map(book => (
+                                            <tr key={book._id}>
+                                                <td>
+                                                    <span
+                                                        className={`status-pill ${book.isPublished ? 'published' : 'draft'}`}
+                                                        onClick={() => handleTogglePublish(book)}
+                                                        style={{ cursor: 'pointer' }}
+                                                        title="Cliquer pour changer le statut"
+                                                    >
+                                                        {book.isPublished ? 'Publié' : 'Brouillon'}
+                                                    </span>
+                                                </td>
+                                                <td><strong>{book.title}</strong></td>
+                                                <td>{book.author}</td>
+                                                <td>
+                                                    <span style={{
+                                                        textTransform: 'capitalize',
+                                                        color: '#aaa',
+                                                        fontSize: '0.85rem'
+                                                    }}>
+                                                        {book.genre}
+                                                    </span>
+                                                </td>
+                                                <td>{book.publishedAt ? new Date(book.publishedAt).toLocaleDateString() : '-'}</td>
+                                                <td>
+                                                    <button className="btn-icon" onClick={() => handleOpenModal(book)} title="Modifier">✏️</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {books.length === 0 && (
+                                            <tr>
+                                                <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#666' }}>
+                                                    Aucun roman dans le catalogue.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </div>
