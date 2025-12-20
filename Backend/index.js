@@ -884,32 +884,7 @@ app.post("/webhook", bodyParser.raw({ type: "application/json" }), async (req, r
   res.json({ received: true });
 });
 
-// =======================
-// STATIC FILES & SPA FALLBACK
-// =======================
-const path = require("path");
 
-// Serve static files from the React frontend app
-// Ensure we point to the correct dist folder
-const frontendPath = path.join(__dirname, "../Frontend/dist");
-app.use(express.static(frontendPath));
-
-// API routes are defined above.
-// Anything else that doesn't match an API route is sent to the React frontend.
-// This allows the SPA to handle routing (e.g., /dashboard, /connexion) after refresh.
-// This allows the SPA to handle routing (e.g., /dashboard, /connexion) after refresh.
-// Modified to use a global middleware "app.use" which catches everything not handled above.
-// This effectively bypasses "path-to-regexp" string matching errors on Render.
-app.use((req, res) => {
-  console.log(`⚠️ Route not found in API, serving index.html for: ${req.url}`);
-  // Use path.resolve to be absolutely sure of the path relative to this file
-  res.sendFile(path.resolve(__dirname, "../Frontend/dist/index.html"), (err) => {
-    if (err) {
-      console.error("Error serving index.html:", err);
-      res.status(500).send("Error loading application.");
-    }
-  });
-});
 
 // =======================
 // SERVER STARTUP
@@ -918,7 +893,7 @@ app.use((req, res) => {
 connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-    console.log(`Serving Frontend from: ${frontendPath}`);
+
   });
 }).catch(err => {
   console.error("Failed to connect to DB, server not started:", err);
