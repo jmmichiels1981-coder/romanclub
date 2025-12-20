@@ -12,13 +12,15 @@ if (!MONGODB_URI) {
 console.log("Tentative de connexion à MongoDB...");
 const DB_NAME = "romanclub";
 
+const API_URL = process.env.VITE_API_URL || "http://localhost:3000";
+
 const BOOKS_DATA = [
     {
         title: "L'Ombre du Silence",
         author: "Marc Levy",
         genre: "polar",
         editorialSummary: "Une enquête palpitante au cœur des secrets d'État. L'inspecteur Rieux reprend du service.",
-        contentUrl: "https://example.com/books/1", // Placeholder
+        contentUrl: `${API_URL}/content/test-book.html`,
         publishedAt: new Date("2024-12-15T00:00:00Z"),
         isPublished: true,
         weeklyRank: 1
@@ -28,7 +30,7 @@ const BOOKS_DATA = [
         author: "Sophie D.",
         genre: "romance",
         editorialSummary: "Quand l'IA décide de trouver l'âme sœur. Une comédie romantique moderne.",
-        contentUrl: "https://example.com/books/2",
+        contentUrl: `${API_URL}/content/test-book.html`,
         publishedAt: new Date("2024-12-18T00:00:00Z"),
         isPublished: true,
         weeklyRank: 2
@@ -38,7 +40,7 @@ const BOOKS_DATA = [
         author: "Pierre B.",
         genre: "sf",
         editorialSummary: "Une odyssée vers l'inconnu. Le vaisseau Espérance ne répond plus.",
-        contentUrl: "https://example.com/books/3",
+        contentUrl: `${API_URL}/content/test-book.html`,
         publishedAt: new Date("2024-12-10T00:00:00Z"),
         isPublished: true,
         weeklyRank: 3
@@ -48,7 +50,7 @@ const BOOKS_DATA = [
         author: "Camille P.",
         genre: "feelgood",
         editorialSummary: "Un roman qui fait du bien, entre chocolat chaud et nouveau départ.",
-        contentUrl: "https://example.com/books/4",
+        contentUrl: `${API_URL}/content/test-book.html`,
         publishedAt: new Date("2025-01-05T00:00:00Z"),
         isPublished: true, // Future published, might be filtered out depending on logic, keeping simple for now
         weeklyRank: 4
@@ -58,7 +60,7 @@ const BOOKS_DATA = [
         author: "Jean Dupont",
         genre: "polar",
         editorialSummary: "Meurtre sur le grand canal.",
-        contentUrl: "https://example.com/books/5",
+        contentUrl: `${API_URL}/content/test-book.html`,
         publishedAt: new Date("2024-11-01T00:00:00Z"),
         isPublished: true,
         weeklyRank: 5

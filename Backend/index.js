@@ -887,6 +887,20 @@ app.post("/webhook", bodyParser.raw({ type: "application/json" }), async (req, r
 
 
 // =======================
+// LOCAL CONTENT SERVING (TESTING)
+// =======================
+const path = require("path");
+app.get("/content/:filename", (req, res) => {
+  const filepath = path.join(__dirname, "content", req.params.filename);
+  res.sendFile(filepath, (err) => {
+    if (err) {
+      console.error(`Error serving content ${filepath}:`, err);
+      res.status(404).send("Content not found");
+    }
+  });
+});
+
+// =======================
 // SERVER STARTUP
 // =======================
 // Wait for DB before listening to prevent "Connexion en cours" infinite loading if DB is slow
