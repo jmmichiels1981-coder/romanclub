@@ -76,8 +76,8 @@ function RegisterPage() {
             alert("Les codes PIN ne correspondent pas.");
             return;
         }
-        if (formData.pin.length !== 4 || isNaN(formData.pin)) {
-            alert("Le code PIN doit être composé de 4 chiffres.");
+        if (formData.pin.length !== 6 || isNaN(formData.pin)) {
+            alert("Le code PIN doit être composé de 6 chiffres.");
             return;
         }
 
@@ -436,13 +436,13 @@ function RegisterPage() {
 
 
                     <div className="input-group" style={{ marginTop: '1rem' }}>
-                        <label className="input-label">Code PIN (4 chiffres)</label>
+                        <label className="input-label">Code PIN (6 chiffres)</label>
                         <div style={{ position: 'relative' }}>
                             <input
                                 type={visibleFields.pin ? "text" : "password"}
                                 name="pin"
-                                maxLength={4}
-                                placeholder="Ex: 1234"
+                                maxLength={6}
+                                placeholder="Ex: 123456"
                                 className="login-input"
                                 required
                                 value={formData.pin}
@@ -484,7 +484,7 @@ function RegisterPage() {
                             <input
                                 type={visibleFields.confirmPin ? "text" : "password"}
                                 name="confirmPin"
-                                maxLength={4}
+                                maxLength={6}
                                 placeholder="Répétez le code PIN"
                                 className="login-input"
                                 required

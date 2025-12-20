@@ -77,11 +77,11 @@ function LoginPage() {
 
 
                     <div className="input-group" style={{ marginTop: '1rem' }}>
-                        <label className="input-label">Code PIN [4 chiffres]</label>
+                        <label className="input-label">Code PIN [6 chiffres]</label>
                         <input
                             type="text"
-                            placeholder="...."
-                            maxLength={4}
+                            placeholder="......"
+                            maxLength={6}
                             className="login-input"
                             required
                             value={pin}

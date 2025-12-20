@@ -660,8 +660,8 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ success: false, message: "Cet email est déjà utilisé." });
     }
 
-    if (!userData.pin || userData.pin.length < 4) {
-      return res.status(400).json({ success: false, message: "Code PIN invalide (min 4 chiffres)." });
+    if (!userData.pin || userData.pin.length < 6) {
+      return res.status(400).json({ success: false, message: "Code PIN invalide (min 6 chiffres)." });
     }
 
     // 2. Logique Stripe (Bloquante)
