@@ -32,11 +32,8 @@ const AdminLoginPage = () => {
                 localStorage.setItem("userLoggedIn", "true");
                 localStorage.setItem("authToken", data.token);
                 // Redirect to admin area or dashboard if no specific admin area yet
-                // User asked "ma console admin", usually /admin/dashboard, but for now /dashboard or /admin
-                // Since /admin is this login page, we need a post-login destination.
-                // Assuming standard dashboard for now, or stay here?
-                // Let's go to /dashboard, assuming admin sees the same dashboard or extra features later.
-                navigate("/dashboard");
+                // Redirect to admin dashboard
+                navigate("/admin/dashboard");
             } else {
                 alert("Erreur : " + (data.message || "Identifiants incorrects"));
                 setIsLoading(false);

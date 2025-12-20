@@ -143,6 +143,7 @@ const stripePromise = loadStripe("pk_test_51STHOn7NHZXHRYC2Firv50CpKpG0B3JQyGJY4
 import ContactPage from "./ContactPage";
 import ForgotPinPage from "./ForgotPinPage";
 import AdminLoginPage from "./AdminLoginPage";
+import AdminDashboardPage from "./AdminDashboardPage";
 
 function App() {
   return (
@@ -161,6 +162,7 @@ function App() {
           <Route path="/connexion" element={<LoginPage />} />
           <Route path="/forgot-pin" element={<ForgotPinPage />} />
           <Route path="/admin" element={<AdminLoginPage />} />
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/mentions" element={<PlaceholderPage title="Mentions légales" />} />
         </Routes>
