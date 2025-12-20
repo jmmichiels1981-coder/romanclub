@@ -29,7 +29,7 @@ const AdminDashboardPage = () => {
                     <h2 className="section-title">Tableau de bord</h2>
                     <div className="tiles-grid">
                         {/* 1. Romans */}
-                        <div className="dash-tile tile-orange">
+                        <div className="dash-tile tile-orange" onClick={() => navigate("/admin/dashboard/books")} style={{ cursor: 'pointer' }}>
                             <div className="tile-icon">📖</div>
                             <h2>Romans</h2>
                             <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '0.5rem' }}>Gestion du catalogue</p>

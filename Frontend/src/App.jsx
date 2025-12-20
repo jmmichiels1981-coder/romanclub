@@ -144,6 +144,7 @@ import ContactPage from "./ContactPage";
 import ForgotPinPage from "./ForgotPinPage";
 import AdminLoginPage from "./AdminLoginPage";
 import AdminDashboardPage from "./AdminDashboardPage";
+import AdminBooksPage from "./AdminBooksPage";
 
 function App() {
   return (
@@ -163,6 +164,7 @@ function App() {
           <Route path="/forgot-pin" element={<ForgotPinPage />} />
           <Route path="/admin" element={<AdminLoginPage />} />
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          <Route path="/admin/dashboard/books" element={<AdminBooksPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/mentions" element={<PlaceholderPage title="Mentions légales" />} />
         </Routes>
