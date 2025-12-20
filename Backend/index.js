@@ -1,4 +1,5 @@
-﻿require("dotenv").config();
+﻿const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 const express = require("express");
 const { MongoClient, ObjectId } = require("mongodb");
 const cors = require("cors");
@@ -598,7 +599,47 @@ app.get("/books/count", requireAuth, async (req, res) => {
   }
 });
 
-// 7. CANCEL SUBSCRIPTION
+// 7. CHANGE PIN
+app.put("/me/change-pin", requireAuth, async (req, res) => {
+  const { currentPin, newPin } = req.body;
+  if (!currentPin || !newPin) return res.status(400).json({ error: "Tous les champs sont requis." });
+
+  // Validate new PIN format
+  if (newPin.length !== 6 || isNaN(newPin)) {
+    return res.status(400).json({ error: "Le nouveau code PIN doit faire 6 chiffres." });
+  }
+
+  try {
+    const user = await usersCollection.findOne({ _id: new ObjectId(req.user.userId) });
+    if (!user) return res.status(404).json({ error: "Utilisateur introuvable." });
+
+    // Verify current PIN
+    const validPin = user.pinHash
+      ? await bcrypt.compare(currentPin, user.pinHash)
+      : false;
+
+    if (!validPin) {
+      return res.status(400).json({ error: "Le code PIN actuel est incorrect." });
+    }
+
+    // Hash new PIN
+    const newPinHash = await bcrypt.hash(newPin, 10);
+
+    // Update in DB
+    await usersCollection.updateOne(
+      { _id: user._id },
+      { $set: { pinHash: newPinHash } }
+    );
+
+    res.json({ success: true, message: "Code PIN modifié avec succès." });
+
+  } catch (error) {
+    console.error("Change PIN error:", error);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// 8. CANCEL SUBSCRIPTION
 app.post("/billing/cancel-subscription", requireAuth, async (req, res) => {
   try {
     const user = await usersCollection.findOne({ _id: new ObjectId(req.user.userId) });
@@ -888,7 +929,7 @@ app.post("/webhook", bodyParser.raw({ type: "application/json" }), async (req, r
 // =======================
 // LOCAL CONTENT SERVING (TESTING)
 // =======================
-const path = require("path");
+
 app.get("/content/:filename", (req, res) => {
   const filepath = path.join(__dirname, "content", req.params.filename);
   res.sendFile(filepath, (err) => {

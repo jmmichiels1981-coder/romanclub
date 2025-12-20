@@ -141,6 +141,7 @@ import { loadStripe } from '@stripe/stripe-js';
 const stripePromise = loadStripe("pk_test_51STHOn7NHZXHRYC2Firv50CpKpG0B3JQyGJY4M5TEmVhdwMxyOJot435PWRH6vXwAYRKdrq44vwEPU9MZw5A2OfD00coVyymF4");
 
 import ContactPage from "./ContactPage";
+import ForgotPinPage from "./ForgotPinPage";
 
 function App() {
   return (
@@ -157,6 +158,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/inscription" element={<RegisterPage />} />
           <Route path="/connexion" element={<LoginPage />} />
+          <Route path="/forgot-pin" element={<ForgotPinPage />} />
           <Route path="/admin" element={<PlaceholderPage title="Admin" />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/mentions" element={<PlaceholderPage title="Mentions légales" />} />

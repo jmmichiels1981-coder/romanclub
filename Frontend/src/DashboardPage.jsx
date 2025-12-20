@@ -470,6 +470,11 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
     // Cancellation State
     const [cancelling, setCancelling] = useState(false);
 
+    // PIN Change State
+    const [editingPin, setEditingPin] = useState(false);
+    const [pinData, setPinData] = useState({ currentPin: "", newPin: "" });
+    const [pinStatus, setPinStatus] = useState("");
+
     // Data State
     const [invoices, setInvoices] = useState([]);
     const [booksCount, setBooksCount] = useState(0);
@@ -698,6 +703,34 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
         }
     };
 
+    const handleUpdatePin = async (e) => {
+        e.preventDefault();
+        setPinStatus("Validation...");
+        try {
+            const res = await fetch(`${API_URL}/me/change-pin`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify(pinData)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setPinStatus("✅ Code PIN modifié avec succès !");
+                setTimeout(() => {
+                    setEditingPin(false);
+                    setPinStatus("");
+                    setPinData({ currentPin: "", newPin: "" });
+                }, 2000);
+            } else {
+                setPinStatus("❌ " + (data.error || "Erreur"));
+            }
+        } catch (error) {
+            setPinStatus("❌ Erreur de connexion");
+        }
+    };
+
     // --- Render Logic ---
 
     if (viewMode === 'invoices') return <SettingsInvoicesView invoices={invoices} onBack={() => setViewMode('main')} />;
@@ -752,7 +785,56 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
                 </div>
             </section>
 
-            {/* 2. Payment Method */}
+
+            {/* 2. Security (PIN) */}
+            <section className="settings-section">
+                <h3>Sécurité</h3>
+                <div className="settings-card">
+                    <div className="setting-row">
+                        <span className="label">Code PIN :</span>
+                        <span>••••••</span>
+                    </div>
+
+                    {!editingPin ? (
+                        <button className="btn-secondary" onClick={() => setEditingPin(true)} style={{ marginTop: '10px' }}>
+                            Changer mon code PIN
+                        </button>
+                    ) : (
+                        <form className="email-edit-form" onSubmit={handleUpdatePin} style={{ marginTop: '1rem', background: '#333', padding: '1rem', borderRadius: '8px' }}>
+                            <div className="input-group" style={{ marginBottom: '1rem' }}>
+                                <label className="input-label" style={{ fontSize: '0.9rem' }}>Code PIN actuel</label>
+                                <input
+                                    type="password"
+                                    maxLength={6}
+                                    className="login-input"
+                                    required
+                                    value={pinData.currentPin}
+                                    onChange={e => setPinData({ ...pinData, currentPin: e.target.value })}
+                                />
+                            </div>
+                            <div className="input-group" style={{ marginBottom: '1rem' }}>
+                                <label className="input-label" style={{ fontSize: '0.9rem' }}>Nouveau Code PIN (6 chiffres)</label>
+                                <input
+                                    type="password"
+                                    maxLength={6}
+                                    placeholder="••••••"
+                                    className="login-input"
+                                    required
+                                    value={pinData.newPin}
+                                    onChange={e => setPinData({ ...pinData, newPin: e.target.value })}
+                                />
+                            </div>
+                            <div className="edit-actions">
+                                <button type="submit" className="btn-small-confirm">Confirmer</button>
+                                <button type="button" onClick={() => { setEditingPin(false); setPinStatus(""); }} className="btn-small-cancel">Annuler</button>
+                            </div>
+                            {pinStatus && <div className="status-message-small" style={{ marginTop: '0.5rem', color: pinStatus.includes('✅') ? '#4caf50' : '#fa755a' }}>{pinStatus}</div>}
+                        </form>
+                    )}
+                </div>
+            </section>
+
+            {/* 3. Payment Method */}
             <section className="settings-section">
                 <h3>Moyen de paiement</h3>
                 <div className="settings-card">
@@ -856,7 +938,7 @@ const SettingsView = ({ userProfile, setUserProfile, authToken, API_URL, stripe,
             <button className="btn-text-cancel" style={{ marginTop: '2rem', fontSize: '0.8rem' }} onClick={handleCancelSubscription}>
                 {cancelling ? 'Traitement...' : 'Annuler l\'abonnement'}
             </button>
-        </div>
+        </div >
     );
 };
 
