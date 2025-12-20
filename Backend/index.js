@@ -48,7 +48,8 @@ async function connectDB() {
   }
 }
 
-connectDB();
+// connectDB called explicitly at startup later
+
 
 // Middleware d'authentification JWT
 const requireAuth = async (req, res, next) => {
@@ -632,19 +633,8 @@ app.post("/billing/cancel-subscription", requireAuth, async (req, res) => {
 
 
 // =======================
-// STATIC FILES & SPA FALLBACK
+// STATIC FILES & SPA FALLBACK MOVED TO END
 // =======================
-const path = require("path");
-
-// Serve static files from the React frontend app
-const frontendPath = path.join(__dirname, "../Frontend/dist");
-app.use(express.static(frontendPath));
-
-// API routes are defined above.
-// Anything else that doesn't match an API route is sent to the React frontend.
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
 
 
 // =======================
@@ -894,6 +884,39 @@ app.post("/webhook", bodyParser.raw({ type: "application/json" }), async (req, r
   res.json({ received: true });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// =======================
+// STATIC FILES & SPA FALLBACK
+// =======================
+const path = require("path");
+
+// Serve static files from the React frontend app
+// Ensure we point to the correct dist folder
+const frontendPath = path.join(__dirname, "../Frontend/dist");
+app.use(express.static(frontendPath));
+
+// API routes are defined above.
+// Anything else that doesn't match an API route is sent to the React frontend.
+// This allows the SPA to handle routing (e.g., /dashboard, /connexion) after refresh.
+app.get("*", (req, res) => {
+  console.log(`⚠️ Route not found in API, serving index.html for: ${req.url}`);
+  // Use path.resolve to be absolutely sure of the path relative to this file
+  res.sendFile(path.resolve(__dirname, "../Frontend/dist/index.html"), (err) => {
+    if (err) {
+      console.error("Error serving index.html:", err);
+      res.status(500).send("Error loading application.");
+    }
+  });
+});
+
+// =======================
+// SERVER STARTUP
+// =======================
+// Wait for DB before listening to prevent "Connexion en cours" infinite loading if DB is slow
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Serving Frontend from: ${frontendPath}`);
+  });
+}).catch(err => {
+  console.error("Failed to connect to DB, server not started:", err);
 });
