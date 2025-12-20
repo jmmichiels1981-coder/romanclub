@@ -61,18 +61,7 @@ const AdminLoginPage = () => {
         }}>
             {/* Header / Logo Area */}
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <div style={{
-                    width: '60px',
-                    height: '60px',
-                    margin: '0 auto 1rem',
-                    backgroundImage: 'url(/logo.png)', // Using existing logo
-                    backgroundSize: 'contain',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'center',
-                    // If logo is image, use img tag preferably for better control
-                }}>
-                    {/* Fallback if using div bg - but better to use img for consistency with main app */}
-                </div>
+                {/* Logo Image */}
                 {/* Override with img tag if needed */}
                 <img src="/logo.png" alt="Logo" style={{ width: '60px', marginBottom: '1rem' }} />
 
