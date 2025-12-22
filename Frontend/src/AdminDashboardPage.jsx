@@ -57,7 +57,7 @@ const AdminDashboardPage = () => {
                         </div>
 
                         {/* 5. Messagerie */}
-                        <div className="dash-tile tile-red" style={{ background: 'linear-gradient(135deg, #c62828 0%, #e53935 100%)' }}>
+                        <div className="dash-tile tile-red" onClick={() => navigate("/admin/dashboard/messages")} style={{ background: 'linear-gradient(135deg, #c62828 0%, #e53935 100%)', cursor: 'pointer' }}>
                             <div className="tile-icon">✉️</div>
                             <h2>Messagerie</h2>
                             <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '0.5rem' }}>Messages de contact</p>

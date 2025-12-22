@@ -147,6 +147,7 @@ import AdminDashboardPage from "./AdminDashboardPage";
 import AdminBooksPage from "./AdminBooksPage";
 import AdminClientsPage from "./AdminClientsPage";
 import AdminStatsPage from "./AdminStatsPage";
+import AdminMessagesPage from "./AdminMessagesPage";
 
 function App() {
   return (
@@ -169,6 +170,7 @@ function App() {
           <Route path="/admin/dashboard/books" element={<AdminBooksPage />} />
           <Route path="/admin/dashboard/clients" element={<AdminClientsPage />} />
           <Route path="/admin/dashboard/stats" element={<AdminStatsPage />} />
+          <Route path="/admin/dashboard/messages" element={<AdminMessagesPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/mentions" element={<PlaceholderPage title="Mentions légales" />} />
         </Routes>
