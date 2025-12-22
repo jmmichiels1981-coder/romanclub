@@ -193,7 +193,8 @@ app.get("/admin/books/:id", requireAuth, requireAdmin, async (req, res) => {
 // 5. GET /admin/users - List all clients
 app.get("/admin/users", requireAuth, requireAdmin, async (req, res) => {
   try {
-    const users = await usersCollection.find({})
+    // Strict filtering: Only role="user", explicitly excluding admins
+    const users = await usersCollection.find({ role: "user" })
       .sort({ createdAt: -1 })
       .toArray();
 
