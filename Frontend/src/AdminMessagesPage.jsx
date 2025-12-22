@@ -70,8 +70,6 @@ const AdminMessagesPage = () => {
                 filter === "unread" ? !msg.isRead :
                     filter === "read" ? msg.isRead :
                         filter === "replied" ? msg.isHandled : true; // Assuming isHandled logic later or just reuse read for now? 
-        // V1 spec: "Statut (lu / non lu)". replié is separate? 
-        // Let's stick to Read/Unread primarily. Replied implies read.
 
         const matchesSearch =
             msg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -84,124 +82,149 @@ const AdminMessagesPage = () => {
     const stats = {
         total: messages.length,
         unread: messages.filter(m => !m.isRead).length,
-        replied: 0 // Placeholder as backend doesn't track reply status strictly yet, or we assume handled=replied if implemented
+        replied: messages.filter(m => m.isHandled).length // Placeholder if isHandled exists
     };
 
     return (
         <div className="dashboard-container">
             <header className="dashboard-header">
                 <div className="header-left">
-                    <button className="back-btn-header" onClick={() => navigate("/admin/dashboard")}>←</button>
-                    <h1>Messagerie SAV</h1>
+                    <button className="back-btn-header" onClick={() => navigate("/admin/dashboard")} style={{ background: "none", border: "none", color: "#fff", fontSize: "1.5rem", paddingRight: "1rem", cursor: "pointer" }}>←</button>
+                    <div>
+                        <h1>Messagerie</h1>
+                        <span style={{ fontSize: "0.85rem", color: "#888", fontWeight: "400" }}>Gestion des emails SAV et recommandations</span>
+                    </div>
                 </div>
             </header>
 
-            <main className="dashboard-content fade-in">
+            <main className="dashboard-content fade-in" style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
                 {/* Stats Cards */}
-                <div className="stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "1.5rem", marginBottom: "2rem" }}>
-                    <div className="stat-card">
-                        <h3>Total messages</h3>
-                        <p className="stat-value">{stats.total}</p>
+                <div className="stats-grid-messages">
+                    <div className="stat-card-message total">
+                        <div className="stat-header-msg">
+                            <span className="stat-title-msg">Total messages</span>
+                            <span className="stat-icon-msg">✉️</span>
+                        </div>
+                        <span className="stat-value-msg">{stats.total}</span>
                     </div>
-                    <div className="stat-card" style={{ borderColor: "#2196f3" }}>
-                        <h3>Non lus</h3>
-                        <p className="stat-value" style={{ color: "#2196f3" }}>{stats.unread}</p>
+                    <div className="stat-card-message unread">
+                        <div className="stat-header-msg">
+                            <span className="stat-title-msg">Non lus</span>
+                            <span className="stat-icon-msg">🗨️</span>
+                        </div>
+                        <span className="stat-value-msg">{stats.unread}</span>
                     </div>
-                    <div className="stat-card" style={{ borderColor: "#4caf50" }}>
-                        <h3>Répondus</h3>
-                        <p className="stat-value" style={{ color: "#4caf50" }}>-</p>
+                    <div className="stat-card-message replied">
+                        <div className="stat-header-msg">
+                            <span className="stat-title-msg">Répondus</span>
+                            <span className="stat-icon-msg">✅</span>
+                        </div>
+                        <span className="stat-value-msg">{stats.replied}</span>
                     </div>
                 </div>
 
                 {/* Filters & Search */}
-                <div className="filters-bar" style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                    <div className="filter-group">
+                <div className="msg-filters-container">
+                    <div className="search-bar-full">
+                        <span className="search-input-icon">🔍</span>
                         <input
                             type="text"
                             placeholder="Rechercher par nom, email ou sujet..."
-                            className="search-input"
+                            className="search-input-fancy"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ padding: "0.5rem", borderRadius: "8px", border: "1px solid #333", background: "#222", color: "#fff", width: "300px" }}
                         />
                     </div>
-                    <div className="filter-tabs" style={{ display: "flex", gap: "0.5rem" }}>
-                        {["all", "unread", "read"].map(f => (
-                            <button
-                                key={f}
-                                onClick={() => setFilter(f)}
-                                className={`filter-btn ${filter === f ? "active" : ""}`}
-                                style={{
-                                    padding: "0.5rem 1rem",
-                                    borderRadius: "8px",
-                                    background: filter === f ? "#e53935" : "#333",
-                                    color: "#fff",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    textTransform: "capitalize"
-                                }}
-                            >
-                                {f === "all" ? "Tous" : f === "unread" ? "Non lus" : "Lus"}
-                            </button>
-                        ))}
+
+                    <div className="filter-row">
+                        <span style={{ color: "#888" }}>⚡ Statut :</span>
+                        <button
+                            className={`filter-btn-text ${filter === "all" ? "active" : ""}`}
+                            onClick={() => setFilter("all")}
+                        >
+                            Tous
+                        </button>
+                        <button
+                            className={`filter-btn-text ${filter === "unread" ? "active" : ""}`}
+                            onClick={() => setFilter("unread")}
+                        >
+                            Non lus
+                        </button>
+                        <button
+                            className={`filter-btn-text ${filter === "read" ? "active" : ""}`}
+                            onClick={() => setFilter("read")}
+                        >
+                            Lus
+                        </button>
+                        <button
+                            className={`filter-btn-text ${filter === "replied" ? "active" : ""}`}
+                            onClick={() => setFilter("replied")}
+                        >
+                            Répondus
+                        </button>
                     </div>
                 </div>
 
-                {/* Messages List */}
-                <div className="books-table-container">
-                    <table className="books-table">
-                        <thead>
-                            <tr>
-                                <th>Nom</th>
-                                <th>Email</th>
-                                <th>Sujet</th>
-                                <th>Date</th>
-                                <th>Statut</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="5" style={{ textAlign: "center", padding: "2rem" }}>Chargement...</td></tr>
-                            ) : filteredMessages.length === 0 ? (
-                                <tr><td colSpan="5" style={{ textAlign: "center", padding: "2rem" }}>Aucun message trouvé</td></tr>
-                            ) : (
-                                filteredMessages.map(msg => (
+                {/* Messages List or Empty State */}
+                {loading ? (
+                    <div className="empty-state-msg">Chargement...</div>
+                ) : filteredMessages.length === 0 ? (
+                    <div className="empty-state-msg">
+                        <span className="empty-icon">✉️</span>
+                        <p>Aucun message trouvé</p>
+                    </div>
+                ) : (
+                    <div className="books-table-container">
+                        <table className="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style={{ width: "40px" }}></th>
+                                    <th>Nom</th>
+                                    <th>Email</th>
+                                    <th>Sujet</th>
+                                    <th>Date</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredMessages.map(msg => (
                                     <tr
                                         key={msg._id}
                                         onClick={() => { setSelectedMessage(msg); handleMarkAsRead(msg._id, msg.isRead); }}
-                                        style={{ cursor: "pointer", background: msg.isRead ? "transparent" : "rgba(229, 57, 53, 0.1)" }}
+                                        className={`msg-table-row ${!msg.isRead ? "unread-row" : ""}`}
                                     >
+                                        <td>{msg.isRead ? "" : <span style={{ display: "block", width: "8px", height: "8px", borderRadius: "50%", background: "#2196f3" }}></span>}</td>
                                         <td>{msg.name}</td>
                                         <td>{msg.email}</td>
                                         <td>{msg.subject}</td>
-                                        <td>{new Date(msg.createdAt).toLocaleDateString()} {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                                        <td>{new Date(msg.createdAt).toLocaleDateString()}</td>
                                         <td>
-                                            <span className={`status-badge ${msg.isRead ? "published" : "draft"}`} style={{ background: msg.isRead ? "#4caf50" : "#e53935" }}>
+                                            <span className={`status-pill ${msg.isRead ? "published" : "draft"}`}>
                                                 {msg.isRead ? "Lu" : "Non lu"}
                                             </span>
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
 
-                {/* Message Detail Modal */}
+                {/* Message Detail Modal (Keeping the same functionality, just ensuring style) */}
                 {selectedMessage && (
                     <div className="modal-overlay" onClick={() => setSelectedMessage(null)}>
-                        <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: "600px", width: "90%" }}>
-                            <div className="modal-header">
-                                <h2>Message de {selectedMessage.name}</h2>
-                                <button className="close-btn" onClick={() => setSelectedMessage(null)}>×</button>
+                        <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: "600px", width: "90%", background: "#1a1a1d", border: "1px solid #333" }}>
+                            <div className="modal-header" style={{ borderBottom: "1px solid #333", paddingBottom: "1rem" }}>
+                                <h2 style={{ color: "#fff", margin: 0 }}>Message de {selectedMessage.name}</h2>
+                                <button className="close-btn" onClick={() => setSelectedMessage(null)} style={{ color: "#fff" }}>×</button>
                             </div>
                             <div className="modal-body" style={{ marginTop: "1rem" }}>
-                                <div style={{ marginBottom: "1rem", color: "#ccc", fontSize: "0.9rem" }}>
-                                    <p><strong>Email:</strong> {selectedMessage.email}</p>
-                                    <p><strong>Date:</strong> {new Date(selectedMessage.createdAt).toLocaleString()}</p>
-                                    <p><strong>Sujet:</strong> {selectedMessage.subject}</p>
+                                <div style={{ marginBottom: "1.5rem", color: "#aaa", fontSize: "0.9rem", display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.5rem 1rem" }}>
+                                    <strong>Email:</strong> <span>{selectedMessage.email}</span>
+                                    <strong>Date:</strong> <span>{new Date(selectedMessage.createdAt).toLocaleString()}</span>
+                                    <strong>Sujet:</strong> <span style={{ color: "#fff" }}>{selectedMessage.subject}</span>
                                 </div>
-                                <div className="message-content" style={{ background: "#222", padding: "1rem", borderRadius: "8px", whiteSpace: "pre-wrap", color: "#fff", border: "1px solid #333" }}>
+                                <div className="message-content" style={{ background: "#222", padding: "1.5rem", borderRadius: "8px", whiteSpace: "pre-wrap", color: "#ddd", border: "1px solid #333", minHeight: "150px" }}>
                                     {selectedMessage.message}
                                 </div>
 
@@ -209,14 +232,14 @@ const AdminMessagesPage = () => {
                                     <button
                                         className="btn-secondary"
                                         onClick={() => setSelectedMessage(null)}
-                                        style={{ padding: "0.5rem 1rem", background: "#333", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                                        style={{ padding: "0.75rem 1.5rem", background: "transparent", color: "#ccc", border: "1px solid #555" }}
                                     >
                                         Fermer
                                     </button>
                                     <button
                                         className="btn-primary"
                                         onClick={() => handleReply(selectedMessage)}
-                                        style={{ padding: "0.5rem 1rem", background: "#2196f3", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                                        style={{ padding: "0.75rem 1.5rem", background: "#2196f3", color: "#fff", border: "none", fontWeight: "600" }}
                                     >
                                         Répondre par email
                                     </button>
