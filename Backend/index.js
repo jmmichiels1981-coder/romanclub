@@ -186,6 +186,49 @@ app.get("/admin/books/:id", requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+// =======================
+// ADMIN ENDPOINTS (CLIENTS)
+// =======================
+
+// 5. GET /admin/users - List all clients
+app.get("/admin/users", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const users = await usersCollection.find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    // Map status for UI
+    const statusMap = {
+      'active': 'Actif',
+      'trialing': 'Actif',
+      'cancel_at_period_end': 'Résilié',
+      'canceled': 'Résilié',
+      'past_due': 'Problème de paiement',
+      'unpaid': 'Problème de paiement',
+      'incomplete': 'En attente',
+      'incomplete_expired': 'En attente'
+    };
+
+    const formattedUsers = users.map(u => ({
+      _id: u._id,
+      prenom: u.prenom,
+      nom: u.nom,
+      email: u.email,
+      pays: u.pays,
+      createdAt: u.createdAt,
+      subscriptionStatus: u.subscriptionStatus, // keep raw
+      displayStatus: statusMap[u.subscriptionStatus] || 'En attente', // mapped
+      cancellationDate: u.cancellationRequestedAt, // if any
+      stripeCustomerId: u.stripeCustomerId
+    }));
+
+    res.json(formattedUsers);
+  } catch (error) {
+    console.error("Admin GET users error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 let booksCollection;
 let userBooksCollection;
 

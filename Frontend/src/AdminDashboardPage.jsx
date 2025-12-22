@@ -36,7 +36,7 @@ const AdminDashboardPage = () => {
                         </div>
 
                         {/* 2. Clients */}
-                        <div className="dash-tile tile-green">
+                        <div className="dash-tile tile-green" onClick={() => navigate("/admin/dashboard/clients")} style={{ cursor: 'pointer' }}>
                             <div className="tile-icon">👥</div>
                             <h2>Clients</h2>
                             <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '0.5rem' }}>Utilisateurs & Abonnés</p>
