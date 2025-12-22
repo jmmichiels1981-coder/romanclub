@@ -230,6 +230,127 @@ app.get("/admin/users", requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+// 6. GET /admin/stats - Global Statistics (V1)
+app.get("/admin/stats", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    // A. GLOBAL STATS
+    // 1. Total Published Books
+    const totalBooks = await booksCollection.countDocuments({ isPublished: true });
+
+    // 2. Total Started Novels (Any entry in user_books means at least started or clicked)
+    // We count documents in user_books where status is NOT "not_started" or just all if we consider any entry as interest
+    const totalStarted = await userBooksCollection.countDocuments({ status: { $in: ["reading", "completed"] } });
+
+    // 3. Total Completed
+    const totalCompleted = await userBooksCollection.countDocuments({ status: "completed" });
+
+
+    // B. GENRE STATS (Aggregation)
+    // We want: Genre | Started | Completed | Completion Rate | Avg Time (Mock)
+    const genreStats = await userBooksCollection.aggregate([
+      // 1. Join with books to get Genre
+      {
+        $lookup: {
+          from: "books",
+          localField: "bookId",
+          foreignField: "_id",
+          as: "book"
+        }
+      },
+      { $unwind: "$book" },
+      // 2. Group by Genre
+      {
+        $group: {
+          _id: "$book.genre",
+          startedCount: { $sum: 1 }, // Total interactions/starts
+          completedCount: {
+            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] }
+          }
+        }
+      }
+    ]).toArray();
+
+    // Map to ensure all 4 genres are present even if 0
+    const allGenres = ["polar", "romance", "science-fiction", "feel-good"];
+
+    // Helper to format mock time based on genre
+    const mockTime = (genre) => {
+      if (genre === 'polar') return '4h 32min';
+      if (genre === 'romance') return '3h 48min';
+      if (genre === 'science-fiction') return '5h 15min';
+      return '3h 22min'; // feel-good
+    };
+
+    const formattedGenreStats = allGenres.map(genreName => {
+      const found = genreStats.find(g => g._id === genreName);
+      const started = found ? found.startedCount : 0;
+      const completed = found ? found.completedCount : 0;
+      const rate = started > 0 ? Math.round((completed / started) * 100) : 0;
+
+      return {
+        genre: genreName,
+        started,
+        completed,
+        completionRate: rate,
+        avgTime: mockTime(genreName) // V1 Mock
+      };
+    });
+
+
+    // C. TOP BOOKS (Most Read)
+    // "Romans les plus lus" roughly equals "most entries in user_books"
+    const topBooksRaw = await userBooksCollection.aggregate([
+      {
+        $group: {
+          _id: "$bookId",
+          reads: { $sum: 1 },
+          completions: {
+            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] }
+          }
+        }
+      },
+      { $sort: { reads: -1 } },
+      { $limit: 5 },
+      // Join for Title/Genre
+      {
+        $lookup: {
+          from: "books",
+          localField: "_id",
+          foreignField: "_id",
+          as: "book"
+        }
+      },
+      { $unwind: "$book" }
+    ]).toArray();
+
+    const formattedTopBooks = topBooksRaw.map((item, index) => {
+      const rate = item.reads > 0 ? Math.round((item.completions / item.reads) * 100) : 0;
+      return {
+        rank: index + 1,
+        _id: item.book._id,
+        title: item.book.title,
+        genre: item.book.genre,
+        reads: item.reads,
+        completionRate: rate
+      };
+    });
+
+    res.json({
+      global: {
+        totalBooks,
+        totalStarted,
+        totalCompleted
+      },
+      genres: formattedGenreStats,
+      topBooks: formattedTopBooks
+    });
+
+  } catch (error) {
+    console.error("Admin GET stats error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 let booksCollection;
 let userBooksCollection;
 

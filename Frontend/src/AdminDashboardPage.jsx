@@ -43,7 +43,7 @@ const AdminDashboardPage = () => {
                         </div>
 
                         {/* 3. Statistiques */}
-                        <div className="dash-tile tile-blue">
+                        <div className="dash-tile tile-blue" onClick={() => navigate("/admin/dashboard/stats")} style={{ cursor: 'pointer' }}>
                             <div className="tile-icon">📊</div>
                             <h2>Statistiques</h2>
                             <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '0.5rem' }}>Performances App</p>
