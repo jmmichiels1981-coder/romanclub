@@ -853,6 +853,7 @@
 .btn-icon:hover {
     background-color: #333;
 }
+
 /* Status Pills Extended */
 .status-pill.error {
     background-color: rgba(244, 67, 54, 0.15);
@@ -878,4 +879,222 @@
 /* Ensure modal is above everything */
 .modal-overlay {
     z-index: 9999;
+}
+
+/* =========================================
+   MESSAGERIE ADMIN SPECIFICS V2
+   ========================================= */
+
+/* Stats Cards */
+.stats-grid-messages {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card-message {
+    background: #1a1a1d;
+    /* Slightly lighter than main bg */
+    border-radius: 8px;
+    /* Slightly rounded */
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #333;
+    /* Faint border default */
+    min-height: 100px;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-content-left {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-title-msg {
+    color: #888888;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value-msg {
+    color: #ffffff;
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.stat-icon-msg {
+    font-size: 1.8rem;
+    color: #555;
+}
+
+/* Card Specific Colors */
+.stat-card-message.total {
+    background: #151518;
+    border-color: #333;
+}
+
+.stat-card-message.total .stat-value-msg {
+    color: #fff;
+}
+
+.stat-card-message.unread {
+    background: #151820;
+    border-color: #213f5b;
+}
+
+.stat-card-message.unread .stat-value-msg {
+    color: #2196f3;
+}
+
+.stat-card-message.unread .stat-icon-msg {
+    color: #2196f3;
+}
+
+.stat-card-message.replied {
+    background: #151a15;
+    border-color: #2e4b30;
+}
+
+.stat-card-message.replied .stat-value-msg {
+    color: #4caf50;
+}
+
+.stat-card-message.replied .stat-icon-msg {
+    color: #4caf50;
+}
+
+
+/* Control Panel (Search + Filters in one box) */
+.msg-control-panel {
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: transparent;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.search-section {
+    padding: 1rem;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+}
+
+.search-input-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    color: #aaa;
+}
+
+.search-icon {
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.search-input-naked {
+    background: transparent;
+    border: none;
+    color: #fff;
+    width: 100%;
+    font-size: 0.95rem;
+    outline: none;
+}
+
+.search-input-naked::placeholder {
+    color: #555;
+    font-style: italic;
+}
+
+.filter-section {
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.filter-label {
+    color: #888;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-options {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-chip {
+    background: #1f1f23;
+    border: 1px solid #333;
+    color: #aaa;
+    padding: 0.3rem 1rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-chip:hover {
+    background: #2a2a2e;
+    color: #fff;
+}
+
+.filter-chip.active {
+    background: #0ea5e9;
+    /* Sky blue/Cyan */
+    border-color: #0ea5e9;
+    color: #fff;
+    font-weight: 600;
+}
+
+
+/* Empty State - Large Box */
+.empty-state-list {
+    border: 1px solid #333;
+    border-radius: 8px;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #111114;
+    color: #555;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.empty-state-text {
+    font-size: 1rem;
+    color: #777;
+}
+
+/* Table Refinements */
+.admin-table thead th {
+    background: #151518;
+    border-bottom: 1px solid #333;
+    font-weight: 500;
 }

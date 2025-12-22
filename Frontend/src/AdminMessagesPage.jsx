@@ -69,7 +69,7 @@ const AdminMessagesPage = () => {
             filter === "all" ? true :
                 filter === "unread" ? !msg.isRead :
                     filter === "read" ? msg.isRead :
-                        filter === "replied" ? msg.isHandled : true; // Assuming isHandled logic later or just reuse read for now? 
+                        filter === "replied" ? msg.isHandled : true;
 
         const matchesSearch =
             msg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -82,8 +82,10 @@ const AdminMessagesPage = () => {
     const stats = {
         total: messages.length,
         unread: messages.filter(m => !m.isRead).length,
-        replied: messages.filter(m => m.isHandled).length // Placeholder if isHandled exists
+        replied: messages.filter(m => m.isHandled).length
     };
+
+    // Icons (using simple unicode/emoji for now to match look, or could use SVG)
 
     return (
         <div className="dashboard-container">
@@ -92,86 +94,99 @@ const AdminMessagesPage = () => {
                     <button className="back-btn-header" onClick={() => navigate("/admin/dashboard")} style={{ background: "none", border: "none", color: "#fff", fontSize: "1.5rem", paddingRight: "1rem", cursor: "pointer" }}>←</button>
                     <div>
                         <h1>Messagerie</h1>
-                        <span style={{ fontSize: "0.85rem", color: "#888", fontWeight: "400" }}>Gestion des emails SAV et recommandations</span>
+                        <span style={{ fontSize: "0.85rem", color: "#666", fontWeight: "400" }}>Gestion des emails SAV et recommandations</span>
                     </div>
                 </div>
             </header>
 
             <main className="dashboard-content fade-in" style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-                {/* Stats Cards */}
+
+                {/* Stats Cards Row */}
                 <div className="stats-grid-messages">
                     <div className="stat-card-message total">
-                        <div className="stat-header-msg">
+                        <div className="stat-content-left">
                             <span className="stat-title-msg">Total messages</span>
+                            <span className="stat-value-msg">{stats.total}</span>
+                        </div>
+                        <div className="stat-icon-container">
                             <span className="stat-icon-msg">✉️</span>
                         </div>
-                        <span className="stat-value-msg">{stats.total}</span>
                     </div>
                     <div className="stat-card-message unread">
-                        <div className="stat-header-msg">
+                        <div className="stat-content-left">
                             <span className="stat-title-msg">Non lus</span>
+                            <span className="stat-value-msg">{stats.unread}</span>
+                        </div>
+                        <div className="stat-icon-container">
                             <span className="stat-icon-msg">🗨️</span>
                         </div>
-                        <span className="stat-value-msg">{stats.unread}</span>
                     </div>
                     <div className="stat-card-message replied">
-                        <div className="stat-header-msg">
+                        <div className="stat-content-left">
                             <span className="stat-title-msg">Répondus</span>
+                            <span className="stat-value-msg">{stats.replied}</span>
+                        </div>
+                        <div className="stat-icon-container">
                             <span className="stat-icon-msg">✅</span>
                         </div>
-                        <span className="stat-value-msg">{stats.replied}</span>
                     </div>
                 </div>
 
-                {/* Filters & Search */}
-                <div className="msg-filters-container">
-                    <div className="search-bar-full">
-                        <span className="search-input-icon">🔍</span>
-                        <input
-                            type="text"
-                            placeholder="Rechercher par nom, email ou sujet..."
-                            className="search-input-fancy"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                {/* Control Panel: Search & Filters Unified */}
+                <div className="msg-control-panel">
+                    <div className="search-section">
+                        <div className="search-input-wrapper">
+                            <span className="search-icon">🔍</span>
+                            <input
+                                type="text"
+                                placeholder="Rechercher par nom, email ou sujet..."
+                                className="search-input-naked"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
                     </div>
-
-                    <div className="filter-row">
-                        <span style={{ color: "#888" }}>⚡ Statut :</span>
-                        <button
-                            className={`filter-btn-text ${filter === "all" ? "active" : ""}`}
-                            onClick={() => setFilter("all")}
-                        >
-                            Tous
-                        </button>
-                        <button
-                            className={`filter-btn-text ${filter === "unread" ? "active" : ""}`}
-                            onClick={() => setFilter("unread")}
-                        >
-                            Non lus
-                        </button>
-                        <button
-                            className={`filter-btn-text ${filter === "read" ? "active" : ""}`}
-                            onClick={() => setFilter("read")}
-                        >
-                            Lus
-                        </button>
-                        <button
-                            className={`filter-btn-text ${filter === "replied" ? "active" : ""}`}
-                            onClick={() => setFilter("replied")}
-                        >
-                            Répondus
-                        </button>
+                    <div className="filter-section">
+                        <div className="filter-label">
+                            <span style={{ fontSize: "1rem" }}>⚡</span>
+                            <span>Statut :</span>
+                        </div>
+                        <div className="filter-options">
+                            <button
+                                className={`filter-chip ${filter === "all" ? "active" : ""}`}
+                                onClick={() => setFilter("all")}
+                            >
+                                Tous
+                            </button>
+                            <button
+                                className={`filter-chip ${filter === "unread" ? "active" : ""}`}
+                                onClick={() => setFilter("unread")}
+                            >
+                                Non lus
+                            </button>
+                            <button
+                                className={`filter-chip ${filter === "read" ? "active" : ""}`}
+                                onClick={() => setFilter("read")}
+                            >
+                                Lus
+                            </button>
+                            <button
+                                className={`filter-chip ${filter === "replied" ? "active" : ""}`}
+                                onClick={() => setFilter("replied")}
+                            >
+                                Répondus
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Messages List or Empty State */}
+                {/* Content Area */}
                 {loading ? (
-                    <div className="empty-state-msg">Chargement...</div>
+                    <div className="empty-state-list">Chargement...</div>
                 ) : filteredMessages.length === 0 ? (
-                    <div className="empty-state-msg">
-                        <span className="empty-icon">✉️</span>
-                        <p>Aucun message trouvé</p>
+                    <div className="empty-state-list">
+                        <div className="empty-state-icon">✉️</div>
+                        <p className="empty-state-text">Aucun message trouvé</p>
                     </div>
                 ) : (
                     <div className="books-table-container">
@@ -210,7 +225,7 @@ const AdminMessagesPage = () => {
                     </div>
                 )}
 
-                {/* Message Detail Modal (Keeping the same functionality, just ensuring style) */}
+                {/* Message Detail Modal */}
                 {selectedMessage && (
                     <div className="modal-overlay" onClick={() => setSelectedMessage(null)}>
                         <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: "600px", width: "90%", background: "#1a1a1d", border: "1px solid #333" }}>
