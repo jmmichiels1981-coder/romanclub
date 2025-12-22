@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./dashboard.css"; // Reuse dashboard styles
-import "./admin-messages.css"; // Specific styles (will create inline or reuse)
 
 const AdminMessagesPage = () => {
     const navigate = useNavigate();

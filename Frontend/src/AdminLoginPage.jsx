@@ -78,7 +78,7 @@ const AdminLoginPage = () => {
             }}>
                 <form onSubmit={handleLogin}>
                     <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             ✉️ Email Admin
                         </label>
                         <input
@@ -101,7 +101,7 @@ const AdminLoginPage = () => {
                     </div>
 
                     <div style={{ marginBottom: '2rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             🔒 Code PIN
                         </label>
                         <input
