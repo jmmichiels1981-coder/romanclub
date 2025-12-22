@@ -27,8 +27,8 @@ async function seedAdmin() {
             email: ADMIN_EMAIL,
             pinHash: pinHash,
             role: "admin",
-            nom: "Admin",
-            prenom: "RomanClub",
+            nom: "Michiels",
+            prenom: "Jean-Marc",
             createdAt: new Date(),
             subscriptionStatus: "active", // Fake active for admin access if needed
             welcomeSeen: true
@@ -44,8 +44,8 @@ async function seedAdmin() {
                     $set: {
                         pinHash: pinHash,
                         role: "admin",
-                        nom: "Admin",
-                        prenom: "RomanClub"
+                        nom: "Michiels",
+                        prenom: "Jean-Marc"
                     },
                     $unset: {
                         pin: "",
