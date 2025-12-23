@@ -7,7 +7,7 @@ const AdminMessagesPage = () => {
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState("all"); // all, unread, read, replied
+    const [filter, setFilter] = useState("all"); // all, unread, read, replied, deleted
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedMessage, setSelectedMessage] = useState(null); // For detail view
 
@@ -77,10 +77,39 @@ const AdminMessagesPage = () => {
         }
     };
 
+    const handleDelete = async (id) => {
+        if (!window.confirm("Voulez-vous vraiment supprimer ce message ?")) return;
+        try {
+            const token = localStorage.getItem("authToken");
+            const response = await fetch(`${API_URL}/admin/messages/${id}/delete`, {
+                method: "PATCH",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (response.ok) {
+                // Remove from list or mark as deleted depending on current view? 
+                // Spec says: "appears only in Deleted filter". 
+                // So if we are in "all", it should disappear.
+                const newStatus = "deleted";
+                setMessages(prev => prev.map(msg =>
+                    msg._id === id ? { ...msg, status: newStatus } : msg
+                ));
+                if (selectedMessage && selectedMessage._id === id) {
+                    setSelectedMessage(null); // Close modal
+                }
+            }
+        } catch (error) {
+            console.error("Error deleting message:", error);
+        }
+    };
+
     const handleReply = (message) => {
         // Mailto
-        const subject = `Re: ${message.subject}`;
-        const body = `\n\n-------------------------\nLe ${new Date(message.createdAt).toLocaleDateString()} à ${new Date(message.createdAt).toLocaleTimeString()}, ${message.name} a écrit :\n${message.message}`;
+        const subjectRaw = message.sujet || message.subject || "Message RomanClub";
+        const subject = `Re: ${subjectRaw}`;
+
+        const nameDisplay = `${message.prenom || ""} ${message.nom || message.name || ""}`.trim();
+
+        const body = `\n\n-------------------------\nLe ${new Date(message.createdAt).toLocaleDateString()} à ${new Date(message.createdAt).toLocaleTimeString()}, ${nameDisplay} a écrit :\n${message.message}`;
         window.location.href = `mailto:${message.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     };
 
@@ -90,24 +119,34 @@ const AdminMessagesPage = () => {
         // Normaliser status si ancien format (fallback):
         const status = msg.status || (msg.isHandled ? "replied" : (msg.isRead ? "read" : "unread"));
 
+        // DELETED LOGIC: 
+        // If filter is NOT 'deleted', exclude deleted messages.
+        // If filter IS 'deleted', show ONLY deleted messages.
+        if (filter !== "deleted" && status === "deleted") return false;
+        if (filter === "deleted" && status !== "deleted") return false;
+
         const matchesFilter =
             filter === "all" ? true :
                 filter === "unread" ? status === "unread" :
                     filter === "read" ? status === "read" :
-                        filter === "replied" ? status === "replied" : true;
+                        filter === "replied" ? status === "replied" :
+                            filter === "deleted" ? status === "deleted" : true;
+
+        const nameDisplay = `${msg.prenom || ""} ${msg.nom || msg.name || ""}`.trim();
 
         const matchesSearch =
-            (msg.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+            nameDisplay.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (msg.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (msg.subject || "").toLowerCase().includes(searchTerm.toLowerCase());
+            (msg.subject || msg.sujet || "").toLowerCase().includes(searchTerm.toLowerCase());
 
         return matchesFilter && matchesSearch;
     });
 
     const stats = {
-        total: messages.length,
+        total: messages.filter(m => (m.status || (m.isRead ? "read" : "unread")) !== "deleted").length, // Total active
         unread: messages.filter(m => (m.status || (m.isRead ? "read" : "unread")) === "unread").length,
-        replied: messages.filter(m => (m.status || (m.isHandled ? "replied" : "unread")) === "replied").length
+        replied: messages.filter(m => (m.status || (m.isHandled ? "replied" : "unread")) === "replied").length,
+        deleted: messages.filter(m => m.status === "deleted").length
     };
 
     // Icons (using simple unicode/emoji for now to match look, or could use SVG)
@@ -153,6 +192,15 @@ const AdminMessagesPage = () => {
                         </div>
                         <div className="stat-icon-container">
                             <span className="stat-icon-msg">✅</span>
+                        </div>
+                    </div>
+                    <div className="stat-card-message deleted-stat" style={{ background: '#2c2c2c', border: '1px solid #444' }}>
+                        <div className="stat-content-left">
+                            <span className="stat-title-msg">Supprimés</span>
+                            <span className="stat-value-msg">{stats.deleted}</span>
+                        </div>
+                        <div className="stat-icon-container">
+                            <span className="stat-icon-msg">🗑️</span>
                         </div>
                     </div>
                 </div>
@@ -201,6 +249,12 @@ const AdminMessagesPage = () => {
                             >
                                 Répondus
                             </button>
+                            <button
+                                className={`filter-chip ${filter === "deleted" ? "active" : ""}`}
+                                onClick={() => setFilter("deleted")}
+                            >
+                                Supprimés
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -219,11 +273,13 @@ const AdminMessagesPage = () => {
                             <thead>
                                 <tr>
                                     <th style={{ width: "40px" }}></th>
+                                    <th>Prénom</th>
                                     <th>Nom</th>
                                     <th>Email</th>
                                     <th>Sujet</th>
                                     <th>Date</th>
                                     <th>Statut</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -236,14 +292,24 @@ const AdminMessagesPage = () => {
                                             className={`msg-table-row ${status === "unread" ? "unread-row" : ""}`}
                                         >
                                             <td>{status !== "unread" ? "" : <span style={{ display: "block", width: "8px", height: "8px", borderRadius: "50%", background: "#2196f3" }}></span>}</td>
-                                            <td>{msg.name}</td>
+                                            <td>{msg.prenom || "-"}</td>
+                                            <td>{msg.nom || msg.name || "Inconnu"}</td>
                                             <td>{msg.email}</td>
-                                            <td>{msg.subject}</td>
+                                            <td>{msg.sujet || msg.subject || "Sans sujet"}</td>
                                             <td>{new Date(msg.createdAt).toLocaleDateString()}</td>
                                             <td>
-                                                <span className={`status-pill ${status === "replied" ? "completed" : (status === "read" ? "visible" : "draft")}`}>
-                                                    {status === "replied" ? "Répondu" : (status === "read" ? "Lu" : "Non lu")}
+                                                <span className={`status-pill ${status === "replied" ? "completed" : (status === "read" ? "visible" : (status === "deleted" ? "draft" : "draft"))}`}>
+                                                    {status === "replied" ? "Répondu" : (status === "read" ? "Lu" : (status === "deleted" ? "Supprimé" : "Non lu"))}
                                                 </span>
+                                            </td>
+                                            <td style={{ textAlign: "right" }}>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleDelete(msg._id); }}
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
+                                                    title="Supprimer"
+                                                >
+                                                    🗑️
+                                                </button>
                                             </td>
                                         </tr>
                                     );

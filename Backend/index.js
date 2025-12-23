@@ -185,6 +185,21 @@ app.patch("/admin/messages/:id/replied", requireAuth, requireAdmin, async (req, 
   }
 });
 
+// 6. PATCH /admin/messages/:id/delete - Soft delete
+app.patch("/admin/messages/:id/delete", requireAuth, requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await contactMessagesCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: "deleted" } }
+    );
+    res.json({ success: true, matchedCount: result.matchedCount });
+  } catch (error) {
+    console.error("Mark deleted error:", error);
+    res.status(500).json({ error: "Update failed" });
+  }
+});
+
 // 6. GET /admin/stats - Global Statistics (V1)
 app.get("/admin/stats", requireAuth, requireAdmin, async (req, res) => {
   try {
