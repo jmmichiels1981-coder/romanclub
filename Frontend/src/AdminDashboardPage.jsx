@@ -4,6 +4,28 @@ import './dashboard.css';
 
 const AdminDashboardPage = () => {
     const navigate = useNavigate();
+    const [unreadCount, setUnreadCount] = React.useState(0);
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+    React.useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const token = localStorage.getItem("authToken");
+                const response = await fetch(`${API_URL}/admin/stats`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.global && typeof data.global.unreadMessages === 'number') {
+                        setUnreadCount(data.global.unreadMessages);
+                    }
+                }
+            } catch (error) {
+                console.error("Dashboard stats error:", error);
+            }
+        };
+        fetchStats();
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem("userLoggedIn");
@@ -57,10 +79,41 @@ const AdminDashboardPage = () => {
                         </div>
 
                         {/* 5. Messagerie */}
-                        <div className="dash-tile tile-red" onClick={() => navigate("/admin/dashboard/messages")} style={{ background: 'linear-gradient(135deg, #c62828 0%, #e53935 100%)', cursor: 'pointer' }}>
+                        <div
+                            className={`dash-tile tile-red ${unreadCount > 0 ? "notification-pulse" : ""}`}
+                            onClick={() => navigate("/admin/dashboard/messages")}
+                            style={{
+                                background: 'linear-gradient(135deg, #c62828 0%, #e53935 100%)',
+                                cursor: 'pointer',
+                                position: 'relative'
+                            }}
+                        >
+                            {unreadCount > 0 && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '10px',
+                                    right: '10px',
+                                    background: '#ff9800',
+                                    color: '#fff',
+                                    borderRadius: '50%',
+                                    width: '24px',
+                                    height: '24px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                                }}>
+                                    {unreadCount}
+                                </div>
+                            )}
                             <div className="tile-icon">✉️</div>
                             <h2>Messagerie</h2>
-                            <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '0.5rem' }}>Messages de contact</p>
+                            <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '0.5rem' }}>
+                                Messages de contact
+                                {unreadCount > 0 && <span style={{ display: 'block', color: '#ffd54f', fontWeight: 'bold', marginTop: '4px' }}>• {unreadCount} nouveau(x)</span>}
+                            </p>
                         </div>
 
                         {/* 6. Sécurité */}

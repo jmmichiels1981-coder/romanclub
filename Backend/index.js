@@ -240,6 +240,15 @@ app.get("/admin/stats", requireAuth, requireAdmin, async (req, res) => {
     // 3. Total Completed
     const totalCompleted = await userBooksCollection.countDocuments({ status: "completed" });
 
+    // 4. Unread Messages (for Dashboard Notification)
+    // Counts "unread" status OR legacy (no status, isRead=false, isHandled!=true)
+    const unreadMessagesCount = await contactMessagesCollection.countDocuments({
+      $or: [
+        { status: "unread" },
+        { status: { $exists: false }, isRead: false, isHandled: { $ne: true } }
+      ]
+    });
+
 
     // B. GENRE STATS (Aggregation)
     // We want: Genre | Started | Completed | Completion Rate | Avg Time (Mock)
@@ -335,7 +344,8 @@ app.get("/admin/stats", requireAuth, requireAdmin, async (req, res) => {
       global: {
         totalBooks,
         totalStarted,
-        totalCompleted
+        totalCompleted,
+        unreadMessages: unreadMessagesCount
       },
       genres: formattedGenreStats,
       topBooks: formattedTopBooks

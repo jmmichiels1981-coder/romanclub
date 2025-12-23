@@ -361,14 +361,34 @@ const AdminMessagesPage = () => {
                                             TRAITÉ
                                         </button>
                                     ) : (
-                                        <button
-                                            type="button"
-                                            className="btn-primary"
-                                            onClick={() => handleReply(selectedMessage)}
-                                            style={{ padding: "0.75rem 1.5rem", background: "#2196f3", color: "#fff", border: "none", fontWeight: "600" }}
-                                        >
-                                            Répondre (Mail)
-                                        </button>
+                                        (() => {
+                                            const subjectRaw = selectedMessage.sujet || selectedMessage.subject || "Message RomanClub";
+                                            const subject = `Re: ${subjectRaw}`;
+                                            const nameDisplay = `${selectedMessage.prenom || ""} ${selectedMessage.nom || selectedMessage.name || ""}`.trim();
+                                            const bodyDate = selectedMessage.createdAt ? new Date(selectedMessage.createdAt).toLocaleDateString() : 'Date inconnue';
+                                            const bodyTime = selectedMessage.createdAt ? new Date(selectedMessage.createdAt).toLocaleTimeString() : '';
+                                            const body = `\n\n-------------------------\nLe ${bodyDate} à ${bodyTime}, ${nameDisplay} a écrit :\n${selectedMessage.message || ""}`;
+                                            const mailtoUrl = `mailto:${selectedMessage.email || ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+                                            return (
+                                                <a
+                                                    href={mailtoUrl}
+                                                    className="btn-primary"
+                                                    style={{
+                                                        padding: "0.75rem 1.5rem",
+                                                        background: "#2196f3",
+                                                        color: "#fff",
+                                                        border: "none",
+                                                        fontWeight: "600",
+                                                        textDecoration: "none",
+                                                        display: "inline-block",
+                                                        textAlign: "center"
+                                                    }}
+                                                >
+                                                    Répondre (Mail)
+                                                </a>
+                                            );
+                                        })()
                                     )}
 
                                     {selectedMessage.status !== "replied" && (
