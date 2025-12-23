@@ -32,6 +32,7 @@ app.use((req, res, next) => {
 
 let db;
 let usersCollection;
+let contactMessagesCollection;
 
 // Connexion MongoDB
 async function connectDB() {
@@ -137,6 +138,19 @@ app.post("/admin/books", requireAuth, requireAdmin, async (req, res) => {
     res.json(formattedUsers);
   } catch (error) {
     console.error("Admin GET users error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 3. GET /admin/messages - List contact messages
+app.get("/admin/messages", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const messages = await contactMessagesCollection.find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+    res.json(messages);
+  } catch (error) {
+    console.error("Admin GET messages error:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -1018,8 +1032,7 @@ app.post("/contact", async (req, res) => {
     };
 
     // Store in dedicated collection
-    const contactsCollection = db.collection("contacts");
-    await contactsCollection.insertOne(messageDoc);
+    await contactMessagesCollection.insertOne(messageDoc);
 
     // Simulation d'envoi d'email
     console.log(`📩 Nouveau message contact reçu de ${contactData.email} pour contact@app-romanclub.com`);
