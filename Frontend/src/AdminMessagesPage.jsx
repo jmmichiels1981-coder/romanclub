@@ -360,6 +360,7 @@ const AdminMessagesPage = () => {
                                         </button>
                                     ) : (
                                         <button
+                                            type="button"
                                             className="btn-primary"
                                             onClick={() => handleReply(selectedMessage)}
                                             style={{ padding: "0.75rem 1.5rem", background: "#2196f3", color: "#fff", border: "none", fontWeight: "600" }}
