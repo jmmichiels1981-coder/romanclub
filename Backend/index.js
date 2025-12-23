@@ -155,6 +155,36 @@ app.get("/admin/messages", requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+// 4. PATCH /admin/messages/:id/read - Mark as read
+app.patch("/admin/messages/:id/read", requireAuth, requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await contactMessagesCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: "read" } }
+    );
+    res.json({ success: true, matchedCount: result.matchedCount });
+  } catch (error) {
+    console.error("Mark read error:", error);
+    res.status(500).json({ error: "Update failed" });
+  }
+});
+
+// 5. PATCH /admin/messages/:id/replied - Mark as replied
+app.patch("/admin/messages/:id/replied", requireAuth, requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await contactMessagesCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: "replied" } }
+    );
+    res.json({ success: true, matchedCount: result.matchedCount });
+  } catch (error) {
+    console.error("Mark replied error:", error);
+    res.status(500).json({ error: "Update failed" });
+  }
+});
+
 // 6. GET /admin/stats - Global Statistics (V1)
 app.get("/admin/stats", requireAuth, requireAdmin, async (req, res) => {
   try {

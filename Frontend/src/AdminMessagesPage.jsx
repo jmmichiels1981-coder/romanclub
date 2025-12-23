@@ -35,7 +35,7 @@ const AdminMessagesPage = () => {
     };
 
     const handleMarkAsRead = async (id, currentStatus) => {
-        if (currentStatus) return; // Already read
+        if (currentStatus !== "unread") return; // Only mark as read if currently unread
         try {
             const token = localStorage.getItem("authToken");
             const response = await fetch(`${API_URL}/admin/messages/${id}/read`, {
@@ -45,14 +45,35 @@ const AdminMessagesPage = () => {
             if (response.ok) {
                 // Update local state
                 setMessages(prev => prev.map(msg =>
-                    msg._id === id ? { ...msg, isRead: true } : msg
+                    msg._id === id ? { ...msg, status: "read" } : msg
                 ));
                 if (selectedMessage && selectedMessage._id === id) {
-                    setSelectedMessage(prev => ({ ...prev, isRead: true }));
+                    setSelectedMessage(prev => ({ ...prev, status: "read" }));
                 }
             }
         } catch (error) {
             console.error("Error marking as read:", error);
+        }
+    };
+
+    const handleMarkAsReplied = async (id) => {
+        try {
+            const token = localStorage.getItem("authToken");
+            const response = await fetch(`${API_URL}/admin/messages/${id}/replied`, {
+                method: "PATCH",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const newStatus = "replied";
+                setMessages(prev => prev.map(msg =>
+                    msg._id === id ? { ...msg, status: newStatus } : msg
+                ));
+                if (selectedMessage && selectedMessage._id === id) {
+                    setSelectedMessage(prev => ({ ...prev, status: newStatus }));
+                }
+            }
+        } catch (error) {
+            console.error("Error marking as replied:", error);
         }
     };
 
@@ -64,12 +85,16 @@ const AdminMessagesPage = () => {
     };
 
     // Filters
+    // Filters
     const filteredMessages = messages.filter(msg => {
+        // Normaliser status si ancien format (fallback):
+        const status = msg.status || (msg.isHandled ? "replied" : (msg.isRead ? "read" : "unread"));
+
         const matchesFilter =
             filter === "all" ? true :
-                filter === "unread" ? !msg.isRead :
-                    filter === "read" ? msg.isRead :
-                        filter === "replied" ? msg.isHandled : true;
+                filter === "unread" ? status === "unread" :
+                    filter === "read" ? status === "read" :
+                        filter === "replied" ? status === "replied" : true;
 
         const matchesSearch =
             (msg.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,8 +106,8 @@ const AdminMessagesPage = () => {
 
     const stats = {
         total: messages.length,
-        unread: messages.filter(m => !m.isRead).length,
-        replied: messages.filter(m => m.isHandled).length
+        unread: messages.filter(m => (m.status || (m.isRead ? "read" : "unread")) === "unread").length,
+        replied: messages.filter(m => (m.status || (m.isHandled ? "replied" : "unread")) === "replied").length
     };
 
     // Icons (using simple unicode/emoji for now to match look, or could use SVG)
@@ -202,24 +227,27 @@ const AdminMessagesPage = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredMessages.map(msg => (
-                                    <tr
-                                        key={msg._id}
-                                        onClick={() => { setSelectedMessage(msg); handleMarkAsRead(msg._id, msg.isRead); }}
-                                        className={`msg-table-row ${!msg.isRead ? "unread-row" : ""}`}
-                                    >
-                                        <td>{msg.isRead ? "" : <span style={{ display: "block", width: "8px", height: "8px", borderRadius: "50%", background: "#2196f3" }}></span>}</td>
-                                        <td>{msg.name}</td>
-                                        <td>{msg.email}</td>
-                                        <td>{msg.subject}</td>
-                                        <td>{new Date(msg.createdAt).toLocaleDateString()}</td>
-                                        <td>
-                                            <span className={`status-pill ${msg.isRead ? "published" : "draft"}`}>
-                                                {msg.isRead ? "Lu" : "Non lu"}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {filteredMessages.map(msg => {
+                                    const status = msg.status || (msg.isHandled ? "replied" : (msg.isRead ? "read" : "unread"));
+                                    return (
+                                        <tr
+                                            key={msg._id}
+                                            onClick={() => { setSelectedMessage(msg); handleMarkAsRead(msg._id, status); }}
+                                            className={`msg-table-row ${status === "unread" ? "unread-row" : ""}`}
+                                        >
+                                            <td>{status !== "unread" ? "" : <span style={{ display: "block", width: "8px", height: "8px", borderRadius: "50%", background: "#2196f3" }}></span>}</td>
+                                            <td>{msg.name}</td>
+                                            <td>{msg.email}</td>
+                                            <td>{msg.subject}</td>
+                                            <td>{new Date(msg.createdAt).toLocaleDateString()}</td>
+                                            <td>
+                                                <span className={`status-pill ${status === "replied" ? "completed" : (status === "read" ? "visible" : "draft")}`}>
+                                                    {status === "replied" ? "Répondu" : (status === "read" ? "Lu" : "Non lu")}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -256,8 +284,17 @@ const AdminMessagesPage = () => {
                                         onClick={() => handleReply(selectedMessage)}
                                         style={{ padding: "0.75rem 1.5rem", background: "#2196f3", color: "#fff", border: "none", fontWeight: "600" }}
                                     >
-                                        Répondre par email
+                                        Répondre (Mail)
                                     </button>
+                                    {selectedMessage.status !== "replied" && (
+                                        <button
+                                            className="btn-primary"
+                                            onClick={() => handleMarkAsReplied(selectedMessage._id)}
+                                            style={{ padding: "0.75rem 1.5rem", background: "#4caf50", color: "#fff", border: "none", fontWeight: "600" }}
+                                        >
+                                            Marquer comme répondu
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
