@@ -139,10 +139,12 @@ const AdminMessagesPage = () => {
 
         const nameDisplay = `${msg.prenom || ""} ${msg.nom || msg.name || ""}`.trim();
 
+        const search = (searchTerm || "").toLowerCase();
+
         const matchesSearch =
-            nameDisplay.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (msg.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (msg.subject || msg.sujet || "").toLowerCase().includes(searchTerm.toLowerCase());
+            (nameDisplay || "").toLowerCase().includes(search) ||
+            (msg.email || "").toLowerCase().includes(search) ||
+            (msg.subject || msg.sujet || "").toLowerCase().includes(search);
 
         return matchesFilter && matchesSearch;
     });
