@@ -108,9 +108,14 @@ const AdminMessagesPage = () => {
         const subject = `Re: ${subjectRaw}`;
 
         const nameDisplay = `${message.prenom || ""} ${message.nom || message.name || ""}`.trim();
+        const bodyDate = message.createdAt ? new Date(message.createdAt).toLocaleDateString() : 'Date inconnue';
+        const bodyTime = message.createdAt ? new Date(message.createdAt).toLocaleTimeString() : '';
 
-        const body = `\n\n-------------------------\nLe ${new Date(message.createdAt).toLocaleDateString()} à ${new Date(message.createdAt).toLocaleTimeString()}, ${nameDisplay} a écrit :\n${message.message}`;
-        window.location.href = `mailto:${message.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        const body = `\n\n-------------------------\nLe ${bodyDate} à ${bodyTime}, ${nameDisplay} a écrit :\n${message.message || ""}`;
+
+        const mailtoLink = `mailto:${message.email || ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+        window.location.href = mailtoLink;
     };
 
     // Filters
@@ -345,13 +350,24 @@ const AdminMessagesPage = () => {
                                     >
                                         Fermer
                                     </button>
-                                    <button
-                                        className="btn-primary"
-                                        onClick={() => handleReply(selectedMessage)}
-                                        style={{ padding: "0.75rem 1.5rem", background: "#2196f3", color: "#fff", border: "none", fontWeight: "600" }}
-                                    >
-                                        Répondre (Mail)
-                                    </button>
+                                    {selectedMessage.status === "replied" ? (
+                                        <button
+                                            className="btn-secondary"
+                                            disabled
+                                            style={{ padding: "0.75rem 1.5rem", background: "#333", color: "#888", border: "1px solid #444", cursor: 'not-allowed', fontWeight: "600" }}
+                                        >
+                                            TRAITÉ
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="btn-primary"
+                                            onClick={() => handleReply(selectedMessage)}
+                                            style={{ padding: "0.75rem 1.5rem", background: "#2196f3", color: "#fff", border: "none", fontWeight: "600" }}
+                                        >
+                                            Répondre (Mail)
+                                        </button>
+                                    )}
+
                                     {selectedMessage.status !== "replied" && (
                                         <button
                                             className="btn-primary"

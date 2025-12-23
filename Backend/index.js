@@ -103,7 +103,33 @@ app.get("/admin/books", requireAuth, requireAdmin, async (req, res) => {
 app.post("/admin/books", requireAuth, requireAdmin, async (req, res) => {
   const { title, author, genre, editorialSummary, contentUrl, publishedAt, isPublished } = req.body;
 
-  // Strict Validation
+  if (!title || !author || !genre || !contentUrl) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const newBook = {
+      title,
+      author,
+      genre,
+      editorialSummary,
+      contentUrl,
+      publishedAt: publishedAt ? new Date(publishedAt) : new Date(),
+      isPublished: !!isPublished,
+      createdAt: new Date(),
+      weeklyRank: 0 // Default
+    };
+
+    await booksCollection.insertOne(newBook);
+    res.json({ success: true, book: newBook });
+  } catch (error) {
+    console.error("Admin POST book error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 2b. GET /admin/users - List Clients (Restored)
+app.get("/admin/users", requireAuth, requireAdmin, async (req, res) => {
   try {
     // Strict filtering: Only role="user", explicitly excluding admins
     const users = await usersCollection.find({ role: "user" })
