@@ -72,9 +72,9 @@ const AdminMessagesPage = () => {
                         filter === "replied" ? msg.isHandled : true;
 
         const matchesSearch =
-            msg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            msg.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            msg.subject.toLowerCase().includes(searchTerm.toLowerCase());
+            (msg.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (msg.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (msg.subject || "").toLowerCase().includes(searchTerm.toLowerCase());
 
         return matchesFilter && matchesSearch;
     });
