@@ -362,31 +362,30 @@ const AdminMessagesPage = () => {
                                         </button>
                                     ) : (
                                         (() => {
-                                            const subjectRaw = selectedMessage.sujet || selectedMessage.subject || "Message RomanClub";
-                                            const subject = `Re: ${subjectRaw}`;
-                                            const nameDisplay = `${selectedMessage.prenom || ""} ${selectedMessage.nom || selectedMessage.name || ""}`.trim();
-                                            const bodyDate = selectedMessage.createdAt ? new Date(selectedMessage.createdAt).toLocaleDateString() : 'Date inconnue';
-                                            const bodyTime = selectedMessage.createdAt ? new Date(selectedMessage.createdAt).toLocaleTimeString() : '';
-                                            const body = `\n\n-------------------------\nLe ${bodyDate} à ${bodyTime}, ${nameDisplay} a écrit :\n${selectedMessage.message || ""}`;
-                                            const mailtoUrl = `mailto:${selectedMessage.email || ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                                            // Show "Copier mail" unless deleted or replied (although replied is handled by if/else above)
+                                            // Logic above: If replied, Show "TRAITÉ" (disabled).
+                                            // Else (here): Show "Copier mail" AND "Marquer comme répondu".
+                                            // Extra check for deleted if needed, though usually deleted messages might not open modal or different UI.
+                                            if (selectedMessage.status === "deleted") return null;
 
                                             return (
-                                                <a
-                                                    href={mailtoUrl}
+                                                <button
                                                     className="btn-primary"
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(selectedMessage.email);
+                                                        alert("Adresse email copiée !");
+                                                    }}
                                                     style={{
                                                         padding: "0.75rem 1.5rem",
-                                                        background: "#2196f3",
+                                                        background: "#ff9800", // Orange as requested
                                                         color: "#fff",
                                                         border: "none",
                                                         fontWeight: "600",
-                                                        textDecoration: "none",
-                                                        display: "inline-block",
-                                                        textAlign: "center"
+                                                        cursor: "pointer"
                                                     }}
                                                 >
-                                                    Répondre (Mail)
-                                                </a>
+                                                    Copier mail
+                                                </button>
                                             );
                                         })()
                                     )}
