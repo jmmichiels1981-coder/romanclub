@@ -611,6 +611,111 @@ app.post("/library/:bookId/complete", requireAuth, async (req, res) => {
 });
 
 // =======================
+// SECURITY ENDPOINTS (ADMIN)
+// =======================
+
+// A. CHANGE ADMIN PIN
+app.post("/admin/security/change-admin-pin", requireAuth, requireAdmin, async (req, res) => {
+  const { currentPin, newPin } = req.body;
+  if (!currentPin || !newPin) {
+    return res.status(400).json({ error: "Tous les champs sont requis." });
+  }
+
+  try {
+    const adminUser = await usersCollection.findOne({ _id: new ObjectId(req.user.userId) });
+    if (!adminUser) return res.status(404).json({ error: "Admin introuvable." });
+
+    // Verify current PIN
+    const validPin = await bcrypt.compare(currentPin, adminUser.pinHash);
+    if (!validPin) {
+      return res.status(401).json({ error: "PIN actuel incorrect." });
+    }
+
+    // Hash new PIN
+    const salt = await bcrypt.genSalt(10);
+    const newPinHash = await bcrypt.hash(newPin, salt);
+
+    await usersCollection.updateOne(
+      { _id: adminUser._id },
+      {
+        $set: {
+          pinHash: newPinHash,
+          lastPinChange: new Date()
+        }
+      }
+    );
+
+    res.json({ success: true, message: "PIN admin mis à jour avec succès." });
+  } catch (error) {
+    console.error("Change Admin PIN error:", error);
+    res.status(500).json({ error: "Erreur serveur lors de la mise à jour du PIN." });
+  }
+});
+
+// B. RESET CLIENT PIN (MANUAL)
+app.post("/admin/security/reset-client-pin", requireAuth, requireAdmin, async (req, res) => {
+  const { clientEmail } = req.body;
+  if (!clientEmail) return res.status(400).json({ error: "Email du client requis." });
+
+  try {
+    // Find client (ensure not admin or just generic user search)
+    // Req says "Gestion de la sécurité (admin + clients)" but here we reset A CLIENT's pin.
+    const clientUser = await usersCollection.findOne({ email: clientEmail });
+
+    if (!clientUser) {
+      return res.status(404).json({ error: "Aucun utilisateur trouvé avec cet email." });
+    }
+
+    // Generate random 6-digit PIN
+    const newPin = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Hash it
+    const salt = await bcrypt.genSalt(10);
+    const pinHash = await bcrypt.hash(newPin, salt);
+
+    // Update user
+    await usersCollection.updateOne(
+      { _id: clientUser._id },
+      {
+        $set: {
+          pinHash: pinHash,
+          failedLoginAttempts: 0,
+          lockUntil: null,
+          lastAdminReset: new Date() // Optional log as per spec
+        }
+      }
+    );
+
+    // Return the CLEAR PIN to admin (One time view)
+    res.json({
+      success: true,
+      message: "PIN réinitialisé avec succès.",
+      generatedPin: newPin,
+      info: "Ce code est à communiquer manuellement au client."
+    });
+
+  } catch (error) {
+    console.error("Reset Client PIN error:", error);
+    res.status(500).json({ error: "Erreur serveur lors de la réinitialisation." });
+  }
+});
+
+// C. GET SECURITY INFO (Admin info)
+app.get("/admin/security/info", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const adminUser = await usersCollection.findOne({ _id: new ObjectId(req.user.userId) });
+    // We can also return general stats here if needed, but primarily admin's own security info
+    res.json({
+      lastPinChange: adminUser.lastPinChange,
+      lastLogin: adminUser.lastLogin
+    });
+  } catch (error) {
+    console.error("Get Security Info error:", error);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// =======================
 // STATS ENDPOINTS
 // =======================
 
@@ -702,7 +807,7 @@ app.post("/login", async (req, res) => {
 
     await usersCollection.updateOne(
       { email },
-      { $set: { failedLoginAttempts: 0, lockUntil: null } }
+      { $set: { failedLoginAttempts: 0, lockUntil: null, lastLogin: new Date() } }
     );
 
     const safeUser = { ...user };

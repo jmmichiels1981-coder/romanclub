@@ -117,7 +117,7 @@ const AdminDashboardPage = () => {
                         </div>
 
                         {/* 6. Sécurité */}
-                        <div className="dash-tile tile-gray" style={{ background: 'linear-gradient(135deg, #37474f 0%, #546e7a 100%)' }}>
+                        <div className="dash-tile tile-gray" onClick={() => navigate("/admin/dashboard/security")} style={{ background: 'linear-gradient(135deg, #37474f 0%, #546e7a 100%)', cursor: 'pointer' }}>
                             <div className="tile-icon">🔒</div>
                             <h2>Sécurité</h2>
                             <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '0.5rem' }}>Accès & Logs</p>
