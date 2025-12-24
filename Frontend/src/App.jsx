@@ -151,6 +151,7 @@ import AdminMessagesPage from "./AdminMessagesPage";
 
 import AdminSecurityPage from "./AdminSecurityPage";
 import AdminNewsletterPage from "./AdminNewsletterPage";
+import AdminFinancePage from "./AdminFinancePage";
 
 function App() {
   return (
@@ -177,6 +178,7 @@ function App() {
 
           <Route path="/admin/dashboard/security" element={<AdminSecurityPage />} />
           <Route path="/admin/dashboard/newsletter" element={<AdminNewsletterPage />} />
+          <Route path="/admin/dashboard/finance" element={<AdminFinancePage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/mentions" element={<PlaceholderPage title="Mentions légales" />} />
         </Routes>

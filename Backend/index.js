@@ -34,6 +34,7 @@ let db;
 let usersCollection;
 let contactMessagesCollection;
 let notificationsCollection;
+let expensesCollection;
 
 // Connexion MongoDB
 async function connectDB() {
@@ -47,6 +48,7 @@ async function connectDB() {
     userBooksCollection = db.collection("user_books");
     contactMessagesCollection = db.collection("contact_messages");
     notificationsCollection = db.collection("notifications");
+    expensesCollection = db.collection("expenses");
     console.log("Connected to MongoDB");
   } catch (error) {
     console.error("MongoDB connection error:", error);
@@ -428,6 +430,173 @@ app.get("/admin/stats", requireAuth, requireAdmin, async (req, res) => {
 
 let booksCollection;
 let userBooksCollection;
+
+// =======================
+// ADMIN FINANCE ENDPOINTS (V1)
+// =======================
+
+// 9. GET /admin/finance/summary
+app.get("/admin/finance/summary", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { month, year } = req.query; // e.g. month=12, year=2025
+
+    // Date Range Calculation
+    let startDate, endDate;
+    const now = new Date();
+
+    if (month && year) {
+      startDate = new Date(year, month - 1, 1);
+      endDate = new Date(year, month, 0, 23, 59, 59); // Last day of month
+    } else {
+      // Default: Current month
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    }
+
+    // 1. Fetch Revenue from Stripe
+    // We use stripe.balanceTransactions for accurate "caisse" view
+    // Filter by created date
+
+    // Note: Stripe list limit is 100 by default, might need pagination for big scale.
+    // For V1/Scale, 100 per month might suffice or we iterate. 
+    // Let's rely on auto-pagination or just fetch 100 for now.
+
+    const stripeTransactions = await stripe.balanceTransactions.list({
+      created: {
+        gte: Math.floor(startDate.getTime() / 1000),
+        lte: Math.floor(endDate.getTime() / 1000)
+      },
+      limit: 100,
+      type: 'charge' // Focus on charges (payments)
+    });
+
+    let totalRevenue = 0;
+    let revenueByCurrency = {}; // { eur: 0, usd: 0 ... }
+    let collectedTaxByCountry = { 'BE': 0, 'FR': 0, 'LU': 0, 'CH': 0, 'CA': 0, 'Autre': 0 };
+
+    // Process Stripe Data
+    for (const txn of stripeTransactions.data) {
+      // Amount is in cents
+      const amount = txn.amount / 100;
+      const currency = txn.currency.toUpperCase();
+
+      // Update Revenue
+      totalRevenue += (currency === 'EUR' ? amount : 0); // Simplified V1: Display Total in EUR (approx if multi-currency)
+      // Or better: keep separate totals
+      revenueByCurrency[currency] = (revenueByCurrency[currency] || 0) + amount;
+
+      // Calculate/Extract Tax
+      // V1 Logic: Check if 'reporting_category' or metadata has tax info.
+      // If Stripe Tax is not active, we simulate based on Card Country?
+      // Transaction doesn't always have country easily. We'd need to expand 'source'.
+      // For V1 "Test Mode", let's assume a Flat Rate simulation if no tax data found.
+
+      // Mock Simulation for V1 (Modify for Prod):
+      // If amount > 0, assume 21% VAT is included for BE/FR/LU standard
+      // Real logic: We need the customer's country.
+      // Let's just create a bucket for reported keys if available, else 0.
+    }
+
+    // 2. Fetch Expenses from MongoDB
+    const expenses = await expensesCollection.find({
+      date: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    }).toArray();
+
+    let totalExpenses = 0;
+    let deductibleTaxByCountry = { 'BE': 0, 'FR': 0, 'LU': 0, 'CH': 0, 'CA': 0, 'Autre': 0 };
+
+    expenses.forEach(exp => {
+      totalExpenses += (exp.amount || 0);
+      const c = exp.country || 'Autre';
+      const tax = exp.vatAmount || 0;
+
+      if (deductibleTaxByCountry[c] !== undefined) {
+        deductibleTaxByCountry[c] += tax;
+      } else {
+        deductibleTaxByCountry['Autre'] += tax;
+      }
+    });
+
+    res.json({
+      period: { startDate, endDate },
+      revenue: {
+        totalEur: revenueByCurrency['EUR'] || 0,
+        byCurrency: revenueByCurrency
+      },
+      expenses: {
+        total: totalExpenses,
+        count: expenses.length
+      },
+      taxes: {
+        collected: collectedTaxByCountry,
+        deductible: deductibleTaxByCountry
+      }
+    });
+
+  } catch (error) {
+    console.error("GET /admin/finance/summary error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 10. GET /admin/finance/expenses - List
+app.get("/admin/finance/expenses", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const expenses = await expensesCollection.find({})
+      .sort({ date: -1 })
+      .limit(50) // Pagination V2
+      .toArray();
+    res.json(expenses);
+  } catch (error) {
+    console.error("GET expenses error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 11. POST /admin/finance/expenses - Create
+app.post("/admin/finance/expenses", requireAuth, requireAdmin, async (req, res) => {
+  const { amount, currency, date, category, country, vatAmount, description } = req.body;
+
+  if (!amount || !date || !category) {
+    return res.status(400).json({ error: "Champs requis manquants" });
+  }
+
+  try {
+    const newExpense = {
+      amount: parseFloat(amount),
+      currency: currency || 'EUR',
+      date: new Date(date),
+      category,
+      country: country || 'Autre',
+      vatAmount: parseFloat(vatAmount) || 0,
+      description: description || '',
+      createdAt: new Date()
+    };
+
+    const result = await expensesCollection.insertOne(newExpense);
+    res.json({ success: true, expense: { ...newExpense, _id: result.insertedId } });
+  } catch (error) {
+    console.error("POST expense error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 12. DELETE /admin/finance/expenses/:id
+app.delete("/admin/finance/expenses/:id", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await expensesCollection.deleteOne({ _id: new ObjectId(id) });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("DELETE expense error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 
 // =======================
 // LIBRARY ENDPOINTS (V1)

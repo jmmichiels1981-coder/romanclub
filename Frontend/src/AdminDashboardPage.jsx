@@ -72,7 +72,7 @@ const AdminDashboardPage = () => {
                         </div>
 
                         {/* 4. Finance */}
-                        <div className="dash-tile tile-purple" style={{ background: 'linear-gradient(135deg, #4a148c 0%, #7b1fa2 100%)' }}>
+                        <div className="dash-tile tile-purple" onClick={() => navigate("/admin/dashboard/finance")} style={{ background: 'linear-gradient(135deg, #4a148c 0%, #7b1fa2 100%)', cursor: 'pointer' }}>
                             <div className="tile-icon">💳</div>
                             <h2>Finance</h2>
                             <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '0.5rem' }}>Facturation & Revenus</p>
