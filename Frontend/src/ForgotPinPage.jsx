@@ -40,7 +40,7 @@ function ForgotPinPage() {
             });
 
             if (response.ok) {
-                alert("Votre demande de réinitialisation a bien été envoyée !");
+                alert("Votre demande de réinitialisation a bien été envoyée ! Pour des raisons de sécurités nous traitons manuellement votre demande. Votre code pin vous sera transmis dans un délais de 12 à 24h maximum.");
                 navigate("/connexion");
             } else {
                 alert("Une erreur est survenue, veuillez réessayer.");
