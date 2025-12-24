@@ -33,6 +33,7 @@ app.use((req, res, next) => {
 let db;
 let usersCollection;
 let contactMessagesCollection;
+let notificationsCollection;
 
 // Connexion MongoDB
 async function connectDB() {
@@ -45,6 +46,7 @@ async function connectDB() {
     booksCollection = db.collection("books");
     userBooksCollection = db.collection("user_books");
     contactMessagesCollection = db.collection("contact_messages");
+    notificationsCollection = db.collection("notifications");
     console.log("Connected to MongoDB");
   } catch (error) {
     console.error("MongoDB connection error:", error);
@@ -225,6 +227,73 @@ app.patch("/admin/messages/:id/delete", requireAuth, requireAdmin, async (req, r
     res.status(500).json({ error: "Update failed" });
   }
 });
+
+// =======================
+// ADMIN NOTIFICATIONS (PUSH)
+// =======================
+
+// 7. GET /admin/notifications - Get stats and history
+app.get("/admin/notifications", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    // 1. Get subscriber count (notificationsAccepted: true)
+    // Note: Assuming 'true' or just present? Let's check 'notificationsAccepted' === true
+    const subscriberCount = await usersCollection.countDocuments({ notificationsAccepted: true });
+
+    // 2. Get total sent notifications (sum of 'sentCount' or just count documents if 1 doc = 1 blast)
+    // We'll store one doc per "blast" with a 'sentCount' field.
+    const history = await notificationsCollection.find({})
+      .sort({ sentAt: -1 })
+      .limit(20)
+      .toArray();
+
+    const totalSentCount = await notificationsCollection.aggregate([
+      { $group: { _id: null, total: { $sum: "$sentCount" } } }
+    ]).toArray();
+
+    const totalSent = totalSentCount.length > 0 ? totalSentCount[0].total : 0;
+
+    res.json({
+      subscriberCount,
+      totalSent,
+      history
+    });
+  } catch (error) {
+    console.error("Admin GET notifications error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 8. POST /admin/notifications - Send Notification
+app.post("/admin/notifications", requireAuth, requireAdmin, async (req, res) => {
+  const { title, message } = req.body;
+  if (!title || !message) {
+    return res.status(400).json({ error: "Titre et message requis" });
+  }
+
+  try {
+    // 1. Count targets
+    const targetsCount = await usersCollection.countDocuments({ notificationsAccepted: true });
+
+    // 2. "Send" (Simulation) - In real world, we would loop or batch send to FCM/WebPush
+    // Here we just record the blast.
+
+    const newNotification = {
+      title,
+      message,
+      sentAt: new Date(),
+      sentCount: targetsCount,
+      status: "sent" // sent, scheduled, failed
+    };
+
+    await notificationsCollection.insertOne(newNotification);
+
+    res.json({ success: true, notification: newNotification });
+  } catch (error) {
+    console.error("Admin POST notification error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 
 // 6. GET /admin/stats - Global Statistics (V1)
 app.get("/admin/stats", requireAuth, requireAdmin, async (req, res) => {

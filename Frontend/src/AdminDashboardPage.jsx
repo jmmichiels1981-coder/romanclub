@@ -122,6 +122,13 @@ const AdminDashboardPage = () => {
                             <h2>Sécurité</h2>
                             <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '0.5rem' }}>Accès & Logs</p>
                         </div>
+
+                        {/* 7. Newsletter */}
+                        <div className="dash-tile tile-purple" onClick={() => navigate("/admin/dashboard/newsletter")} style={{ background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', cursor: 'pointer', border: '1px solid #475569' }}>
+                            <div className="tile-icon">🔔</div>
+                            <h2>Newsletter</h2>
+                            <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '0.5rem' }}>Push Notifications</p>
+                        </div>
                     </div>
                 </div>
             </main>
