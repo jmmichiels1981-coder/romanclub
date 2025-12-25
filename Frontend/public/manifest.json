@@ -1,0 +1,16 @@
+{
+    "name": "RomanClub",
+    "short_name": "RomanClub",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0f172a",
+    "theme_color": "#0f172a",
+    "description": "Le club de lecture numérique pour les auteurs émergents.",
+    "icons": [
+        {
+            "src": "/logo.png",
+            "sizes": "192x192 512x512",
+            "type": "image/png"
+        }
+    ]
+}
