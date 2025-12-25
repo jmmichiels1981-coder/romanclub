@@ -4,6 +4,7 @@ const PwaInstallPrompt = () => {
     const [isVisible, setIsVisible] = useState(false);
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [isIOS, setIsIOS] = useState(false);
+    const [showIOSInstructions, setShowIOSInstructions] = useState(false);
 
     useEffect(() => {
         // 1. Check if already installed (Standalone mode)
@@ -49,15 +50,16 @@ const PwaInstallPrompt = () => {
     }, []);
 
     const handleInstallClick = async () => {
-        if (!deferredPrompt) return;
-
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-
-        if (outcome === 'accepted') {
-            setIsVisible(false);
+        if (isIOS) {
+            setShowIOSInstructions(true);
+        } else if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                setIsVisible(false);
+            }
+            setDeferredPrompt(null);
         }
-        setDeferredPrompt(null);
     };
 
     const handleDismiss = () => {
@@ -68,35 +70,73 @@ const PwaInstallPrompt = () => {
     if (!isVisible) return null;
 
     return (
-        <div style={styles.overlay}>
-            <div style={styles.card}>
-                <div style={styles.content}>
-                    <div style={styles.iconWrapper}>
-                        {/* Mock Icon mimicking the logo or generic mobile icon */}
-                        <span style={{ fontSize: '24px' }}>📱</span>
+        <>
+            {/* MAIN PROMPT BANNER */}
+            <div style={styles.overlay}>
+                <div style={styles.card}>
+                    <div style={styles.content}>
+                        <div style={styles.iconWrapper}>
+                            <span style={{ fontSize: '24px' }}>📱</span>
+                        </div>
+                        <div style={styles.textWrapper}>
+                            <h3 style={styles.title}>Installer RomanClub</h3>
+                            <p style={styles.text}>
+                                Installer l'application Roman Club sur votre téléphone/tablette pour une meilleure expérience.
+                            </p>
+                        </div>
+                        <button onClick={handleDismiss} style={styles.closeBtn}>×</button>
                     </div>
-                    <div style={styles.textWrapper}>
-                        <h3 style={styles.title}>Installer RomanClub</h3>
-                        <p style={styles.text}>
-                            Installer l'application Roman Club sur votre téléphone/tablette pour une meilleure expérience.
-                        </p>
-                    </div>
-                    <button onClick={handleDismiss} style={styles.closeBtn}>×</button>
-                </div>
 
-                {isIOS ? (
-                    <div style={styles.iosInstructions}>
-                        <p style={{ margin: 0, fontSize: '0.9rem' }}>
-                            Pour installer, appuyez sur <span style={{ fontSize: '1.2em' }}>⎋</span> (Partager) puis sur <strong>"Sur l'écran d'accueil"</strong>.
-                        </p>
-                    </div>
-                ) : (
                     <button onClick={handleInstallClick} style={styles.installBtn}>
                         Installer Roman Club
                     </button>
-                )}
+                </div>
             </div>
-        </div>
+
+            {/* iOS INSTRUCTIONS MODAL */}
+            {showIOSInstructions && (
+                <div style={styles.modalOverlay}>
+                    <div style={styles.modalCard}>
+                        <div style={styles.modalHeader}>
+                            <h3>Installation sur iOS</h3>
+                            <button onClick={() => setShowIOSInstructions(false)} style={styles.modalCloseBtn}>×</button>
+                        </div>
+                        <div style={styles.modalBody}>
+                            <p>Pour installer l'application sur votre iPhone / iPad, suivez ces 2 étapes :</p>
+
+                            <div style={styles.step}>
+                                <div style={styles.stepIcon}>
+                                    {/* Share Icon SVG */}
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                                        <polyline points="16 6 12 2 8 6" />
+                                        <line x1="12" y1="2" x2="12" y2="15" />
+                                    </svg>
+                                </div>
+                                <div style={styles.stepText}>
+                                    1. Appuyez sur le bouton <strong>Partager</strong> dans la barre de menu de Safari.
+                                </div>
+                            </div>
+
+                            <div style={styles.step}>
+                                <div style={styles.stepIcon}>
+                                    {/* Plus Square Icon SVG */}
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                        <line x1="12" y1="8" x2="12" y2="16" />
+                                        <line x1="8" y1="12" x2="16" y2="12" />
+                                    </svg>
+                                </div>
+                                <div style={styles.stepText}>
+                                    2. Sélectionnez <strong>Sur l'écran d'accueil</strong> dans la liste.
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={() => setShowIOSInstructions(false)} style={styles.modalBtn}>Compris</button>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 
@@ -106,7 +146,7 @@ const styles = {
         bottom: '20px',
         left: '20px',
         right: '20px',
-        zIndex: 9999,
+        zIndex: 9998,
         display: 'flex',
         justifyContent: 'center',
         paddingBottom: 'safe-area-inset-bottom'
@@ -177,13 +217,76 @@ const styles = {
         fontWeight: 'bold',
         cursor: 'pointer'
     },
-    iosInstructions: {
-        marginTop: '12px',
-        padding: '10px',
+    // Modal Styles
+    modalOverlay: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.8)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px'
+    },
+    modalCard: {
+        background: '#1e293b',
+        width: '100%',
+        maxWidth: '360px',
+        borderRadius: '16px',
+        padding: '24px',
+        color: 'white',
+        border: '1px solid #334155',
+        animation: 'fadeIn 0.2s ease-out'
+    },
+    modalHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px'
+    },
+    modalCloseBtn: {
+        background: 'none',
+        border: 'none',
+        color: '#94a3b8',
+        fontSize: '1.5rem',
+        cursor: 'pointer'
+    },
+    modalBody: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px'
+    },
+    step: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
         background: 'rgba(255,255,255,0.05)',
+        padding: '12px',
+        borderRadius: '8px'
+    },
+    stepIcon: {
+        color: '#3b82f6',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    stepText: {
+        fontSize: '0.95rem',
+        lineHeight: '1.4'
+    },
+    modalBtn: {
+        marginTop: '20px',
+        width: '100%',
+        background: '#334155',
+        color: '#fff',
+        border: 'none',
+        padding: '12px',
         borderRadius: '8px',
-        textAlign: 'center',
-        color: '#cbd5e1'
+        fontWeight: 'bold',
+        cursor: 'pointer'
     }
 };
 
