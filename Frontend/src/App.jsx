@@ -153,11 +153,13 @@ import AdminSecurityPage from "./AdminSecurityPage";
 import AdminNewsletterPage from "./AdminNewsletterPage";
 import AdminFinancePage from "./AdminFinancePage";
 import PwaInstallPrompt from "./PwaInstallPrompt";
+import NotificationPrompt from "./NotificationPrompt";
 
 function App() {
   return (
     <Elements stripe={stripePromise}>
       <PwaInstallPrompt />
+      <NotificationPrompt />
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
