@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement, IbanElement } from "@stripe/react-stripe-js";
 import WelcomeModal from './WelcomeModal';
 import TutorialModal from './TutorialModal';
+import { getDeviceId } from "./utils/device";
 import './dashboard.css';
 
 // =========================================

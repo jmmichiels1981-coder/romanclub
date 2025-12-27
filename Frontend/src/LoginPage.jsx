@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getDeviceId } from "./utils/device";
 import "./login.css";
 
 function LoginPage() {
@@ -27,7 +28,11 @@ function LoginPage() {
             const response = await fetch(`${API_URL}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, pin })
+                body: JSON.stringify({
+                    email,
+                    pin,
+                    deviceId: getDeviceId()
+                })
             });
 
             const data = await response.json();
@@ -40,7 +45,12 @@ function LoginPage() {
                 localStorage.setItem("savedEmail", email);
                 navigate("/dashboard");
             } else {
-                alert("Erreur de connexion : " + (data.message || "Identifiants incorrects"));
+                if (data.code === 'DEVICE_LIMIT_REACHED') {
+                    // Premium Message
+                    alert("Sécurité : Votre compte est déjà actif sur un autre appareil.\n\nPour garantir la sécurité de votre accès, une seule session simultanée est autorisée.\n\nVeuillez vous déconnecter de votre autre appareil pour continuer.");
+                } else {
+                    alert("Erreur de connexion : " + (data.message || "Identifiants incorrects"));
+                }
                 setIsLoading(false);
             }
         } catch (error) {

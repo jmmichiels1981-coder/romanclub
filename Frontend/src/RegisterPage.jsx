@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement, IbanElement } from "@stripe/react-stripe-js";
+import { getDeviceId } from "./utils/device";
+import { useEffect } from "react";
 import "./login.css";
 
 // Stripe Element Styles
@@ -24,6 +26,14 @@ function RegisterPage() {
     const navigate = useNavigate();
     const stripe = useStripe();
     const elements = useElements();
+
+    // Security: Clear any existing session on mount to prevent leaks/conflicts
+    useEffect(() => {
+        localStorage.removeItem("user");
+        localStorage.removeItem("userLoggedIn");
+        localStorage.removeItem("authToken");
+        // Keep savedEmail if any? Maybe better to clear to ensure fresh start
+    }, []);
 
     // Use environment variable or default to localhost
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -155,7 +165,8 @@ function RegisterPage() {
             const payload = {
                 ...formData,
                 paymentMethodId: paymentMethodId,
-                paymentMethodType: paymentMethod
+                paymentMethodType: paymentMethod,
+                deviceId: getDeviceId() // Send deviceId for initial session
             };
 
             const response = await fetch(`${API_URL}/register`, {

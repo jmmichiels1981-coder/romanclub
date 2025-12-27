@@ -86,6 +86,137 @@ const requireAdmin = async (req, res, next) => {
   next();
 };
 
+const MAX_DEVICES = 1;
+const DEVICE_EXPIRY_DAYS = 14;
+
+// Helper to filter active devices
+function cleanActiveDevices(devices) {
+  if (!devices || !Array.isArray(devices)) return [];
+
+  // Convert old string format to object format if necessary (Migration V0 -> V1)
+  // Actually for V1 we start fresh, but safeguard:
+  const normalizedDevices = devices.map(d => {
+    if (typeof d === 'string') return { deviceId: d, lastSeenAt: new Date() };
+    return d;
+  });
+
+  const now = new Date();
+  const expiryMs = DEVICE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+
+  return normalizedDevices.filter(d => {
+    const lastSeen = new Date(d.lastSeenAt);
+    return (now - lastSeen) < expiryMs;
+  });
+}
+
+// LOGIN ENDPOINT
+app.post("/login", async (req, res) => {
+  const { email, pin, deviceId } = req.body; // Expect deviceId
+
+  if (!email || !pin) {
+    return res.status(400).json({ message: "Email et code PIN requis" });
+  }
+
+  try {
+    const user = await usersCollection.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Utilisateur non trouvé" });
+    }
+
+    // PIN Check
+    // Demo backdoor
+    if (user.pinHash === "demo_hash" && pin === "000000") {
+      // Allow
+    } else {
+      const isMatch = await bcrypt.compare(pin, user.pinHash);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Code PIN incorrect" });
+      }
+    }
+
+    // === DEVICE SECURITY CHECK ===
+    if (user.role !== 'admin') { // Admins bypass device limits usually, or enforcing strictly? Let's enforce for 'user' role primarily.
+
+      let currentDevices = cleanActiveDevices(user.activeDevices || []);
+
+      // Is this device already known?
+      const existingDeviceIndex = currentDevices.findIndex(d => d.deviceId === deviceId);
+
+      if (existingDeviceIndex !== -1) {
+        // Updated lastSeen
+        currentDevices[existingDeviceIndex].lastSeenAt = new Date();
+      } else {
+        // New device. Check limit.
+        if (currentDevices.length >= MAX_DEVICES) {
+          // REJECT
+          return res.status(403).json({
+            success: false,
+            code: 'DEVICE_LIMIT_REACHED',
+            message: "Votre compte est déjà actif sur un autre appareil. Pour garantir votre sécurité, l'accès est limité à un appareil simultané. Veuillez vous déconnecter de votre ancienne session."
+          });
+        }
+        // Add new device
+        currentDevices.push({ deviceId, lastSeenAt: new Date() });
+      }
+
+      // Save updated devices list
+      await usersCollection.updateOne(
+        { _id: user._id },
+        { $set: { activeDevices: currentDevices, lastLogin: new Date() } }
+      );
+    }
+    // ==============================
+
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, role: user.role || "user" },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Remove sensitive data
+    const userToSend = { ...user };
+    delete userToSend.password;
+    delete userToSend.pinHash;
+    delete userToSend.activeDevices; // Don't expose this
+
+    res.json({ success: true, token, user: userToSend });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// LOGOUT ENDPOINT (Release Device)
+app.post("/logout", async (req, res) => {
+  const { deviceId, email } = req.body;
+  // We can rely on JWT requireAuth if we want strict security, 
+  // but often logout is called even if token expired. 
+  // Let's rely on email (or userId from token if cleaner). 
+  // For V1, accepting email + deviceId is safer to ensure we find the user.
+
+  if (!email || !deviceId) {
+    return res.status(400).json({ message: "Data required" });
+  }
+
+  try {
+    const user = await usersCollection.findOne({ email });
+    if (user) {
+      let currentDevices = cleanActiveDevices(user.activeDevices || []);
+      // Remove specific device
+      currentDevices = currentDevices.filter(d => d.deviceId !== deviceId);
+
+      await usersCollection.updateOne(
+        { _id: user._id },
+        { $set: { activeDevices: currentDevices } }
+      );
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Logout error:", err);
+    res.status(500).json({ message: "Error" });
+  }
+});
+
 // =======================
 // ADMIN ENDPOINTS (BOOKS)
 // =======================
